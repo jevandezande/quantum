@@ -98,12 +98,15 @@ def test_mult():
     assert_equal(mult_1s2.max_mult, 1)
     assert_equal(mult_1s2.max_am, 0)
     np_assert_equal(mult_1s2.table, [[1]])
+    np_assert_equal(mult_1s2.table, [[1]])
 
     mult_1s1_2s1_3s2 = multiple_subshell_terms((1, 0, 1), (2, 0, 1), (3, 0, 2))
     assert_equal(mult_1s1_2s1_3s2.max_mult, 3)
     assert_equal(mult_1s1_2s1_3s2.max_am, 0)
-    table = np.array([[2], [1]])
+    table = [[2], [1]]
     np_assert_equal(mult_1s1_2s1_3s2.table, table)
+    cleaned = [[1], [1]]
+    np_assert_equal(mult_1s1_2s1_3s2.cleaned().table, cleaned)
 
 
 def test_mult_long():
@@ -115,3 +118,9 @@ def test_mult_long():
                   [46,   42,  33,  21,  11,   4,   1,   0,   0],
                   [6,     5,   4,   2,   1,   0,   0,   0,   0]])
     np_assert_equal(mult_1s1_2p2_3d3.table, t)
+
+    c = [[4,  9, 13, 12, 10,  6,  3,  1,  0],
+         [6, 16, 21, 20, 15,  9,  4,  1,  0],
+         [3,  8, 10,  9,  6,  3,  1,  0,  0],
+         [1,  1,  2,  1,  1,  0,  0,  0,  0]]
+    np_assert_equal(mult_1s1_2p2_3d3.cleaned().table, c)
