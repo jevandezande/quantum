@@ -1,18 +1,21 @@
 from itertools import combinations
 from fractions import Fraction as Frac
 import numpy as np
+from copy import deepcopy
+
+AM_SYMBOLS = 'spdfghklmn'
+AM_SYMBOLS_UP = 'SPDFGHKLMN'
 
 
 class SpinOrbital:
     def __init__(self, n, l, ml, spin):
         """A spin orbital"""
-        self.orbs = 'spdfghklmn'
         if not isinstance(n, int) or n < 1:
             raise SyntaxError("Shells are integers starting at 1")
 
         if isinstance(l, str):
             try:
-                l = self.orbs.index(l)
+                l = AM_SYMBOLS.index(l)
             except ValueError:
                 raise SyntaxError("Invalid orbital")
         elif not isinstance(l, int) or l < 0:
@@ -37,7 +40,7 @@ class SpinOrbital:
 
     def __str__(self):
         spin = 'a' if self.spin > 0 else 'b'
-        orb = self.orbs[self.l]
+        orb = AM_SYMBOLS[self.l]
         return '{n}{l}_{{{ml}}}{spin}'.format(n=self.n, l=orb, ml=self.ml,
                                               spin=spin)
 
@@ -86,12 +89,13 @@ def calc_vals(orbs):
 
 class TermSymbol:
     def __init__(self, mult, am):
+        if not TermSymbol.check(mult, am):
+            raise SyntaxError("Multiplicity and angular momentum must be ints")
         self.am = abs(am)
         self.mult = mult
 
     def __str__(self):
-        symbols = 'SPDFGHKLMN'
-        return '{}{}'.format(self.mult, symbols[abs(self.am)])
+        return '{}{}'.format(self.mult, AM_SYMBOLS_UP[abs(self.am)])
 
     def __repr__(self):
         return str(self)
@@ -101,13 +105,26 @@ class TermSymbol:
             return True
         return False
 
+    @staticmethod
+    def check(mult, am):
+        if not isinstance(mult, int) or mult < 1 or not isinstance(am, int):
+            return False
+        return True
+
+    @staticmethod
+    def latex(mult, am):
+        """Return a latex based representation of the term symbol"""
+        if not TermSymbol.check(mult, am):
+            raise SyntaxError("Multiplicity and angular momentum must be ints")
+        return "$^{}${}".format(mult, AM_SYMBOLS_UP[am])
+
 
 def find_term_symbol(orbs, latex=False):
     """Generate the term symbol for the given set of orbitals
     WARNING: It does not check if the set of orbitals is valid
     """
     am, spin = calc_vals(orbs)
-    return TermSymbol(2*spin + 1, am)
+    return TermSymbol(int(2*spin + 1), am)
 
 
 class TermTable:
@@ -141,24 +158,62 @@ class TermTable:
     def increment(self, mult, am):
         self.table[(mult - 1) // 2][am] += 1
 
-    def clean_table(self):
-        """Remove all the lower manifestations of terms
+    def cleaned(self):
+        """Create a new TermTable with all lower manifestations of terms removed
         i.e. subtract the value of (a,b) from other terms where x<=a, y<=b"""
-        for i in reversed(range(len(self.table))):
-            for j in reversed(range(len(self.table[0]))):
-                count = self.table[i, j]
-                self.table[:i+1, :j+1] -= count
-                self.table[i, j] = count
+        cleaned = deepcopy(self)
+        for i in reversed(range(len(cleaned.table))):
+            for j in reversed(range(len(cleaned.table[0]))):
+                count = cleaned.table[i, j]
+                cleaned.table[:i+1, :j+1] -= count
+                cleaned.table[i, j] = count
 
-    def print(self, style='table'):
+        return cleaned
+
+    def string(self, style='table'):
         """Print the table in a nice format"""
         out = ''
         if style == 'table':
-            line = '{}' + '{:<4}'*len(self.table[0])
-            for i, row in enumerate(self.table):
-                out += line.format(i, *row)
+            top_line = 'M\\L|' + ' {:> 3}'*self.width + '\n'
+            out += top_line.format(*list(range(self.width)))
+            out += '-'*(4 + 4*self.width) + '\n'
+            line = '{:> 3}|' + ' {:> 3}'*self.width + '\n'
+            for i, row in reversed(list(enumerate(self.table))):
+                mult = self.min_mult + i*2 + 1
+                out += line.format(mult, *row)
+                out += '-'*(4 + 4*self.width) + '\n'
 
-        print(out)
+        elif style == 'latex':
+            out += '\\begin{tabular}{ r |' + ' c'*self.width + ' } \n'
+            top_line = 'M\\L ' + '& {:> 6} '*self.width + '\\hl \n'
+            out += top_line.format(*list(range(self.width)))
+            line = '{:>3} ' + '& {:>6} '*self.width + '\\\\ \n'
+            for i, row in reversed(list(enumerate(self.table))):
+                mult = self.min_mult + i*2 + 1
+                symbs = [TermSymbol.latex(mult, am) for am in range(len(row))]
+                out += line.format(mult, *symbs)
+            out += '\\end{tabular}'
+
+        elif style == 'latex-crossed':
+            out += '\\begin{tabular}{ r |' + ' c'*self.width + ' } \n'
+            top_line = 'M\\L ' + '& {:> 10} '*self.width + '\\hl \n'
+            out += top_line.format(*list(range(self.width)))
+            t_form = '& {:>10} '
+            for i, row in reversed(list(enumerate(self.table))):
+                mult = self.min_mult + i*2 + 1
+                out += '{:>3} '.format(mult)
+                for am in range(len(row)):
+                    symb = TermSymbol.latex(mult, am)
+                    count = self.table[i, am]
+                    t = TermSymbol.latex(mult, am)
+                    if count == 0:
+                        out += t_form.format('\\x{' + t + '}')
+                    else:
+                        out += t_form.format('\\' + 'O'*count + '{' + t + '}')
+                out += '\\\\ \n'
+            out += '\\end{tabular}'
+
+        return out
 
 
 def subshell_terms(shell, l, e_num):

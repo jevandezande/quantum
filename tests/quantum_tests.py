@@ -67,6 +67,7 @@ def test_terms_table():
     a = TermTable(2, 1)
     a.set(1, 1, 5)
     assert_equal(a.get(1, 1), 5)
+    p2_terms = subshell_terms(2, 1, 2)
 
 
 def test_subshell_terms_and_clean():
@@ -74,13 +75,11 @@ def test_subshell_terms_and_clean():
     s2_table.set(1, 0, 1)
     s2_terms = subshell_terms(1, 0, 2)
     assert_equal(s2_terms, s2_table)
-    s2_terms.clean_table()
-    assert_equal(s2_terms, s2_table)
+    np_assert_equal(s2_terms.cleaned().table, [[1]])
 
-    p2_table = TermTable(2, 1)
-    p2_table.table = np.array([[3, 2, 1], [1, 1, 0]])
+    p2_table = np.array([[3, 2, 1], [1, 1, 0]])
     p2_terms = subshell_terms(2, 1, 2)
-    np_assert_equal(p2_terms.table, p2_table.table)
-    p2_terms.clean_table()
-    p2_table.table = np.array([[1, 0, 1], [0, 1, 0]])
-    np_assert_equal(p2_terms.table, p2_table.table)
+    np_assert_equal(p2_terms.table, p2_table)
+    np_assert_equal(p2_terms.cleaned().table, np.array([[1, 0, 1], [0, 1, 0]]))
+    d3_terms = subshell_terms(3, 2, 3)
+    print(d3_terms.cleaned().string('latex-crossed'))
