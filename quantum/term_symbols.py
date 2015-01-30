@@ -1,4 +1,4 @@
-from itertools import combinations
+from itertools import combinations, product
 from fractions import Fraction as Frac
 import numpy as np
 from copy import deepcopy
@@ -53,9 +53,11 @@ class SpinOrbital:
             return True
         return False
 
+
 def subshell_iterator(shell, l):
     """Iterate through all the orbitals in the specified subshell"""
     # iterate from highest to lowest m_l
+
 
 def spin_iterator():
     """Iterate through alpha (1/2) and beta (-1/2) spins"""
@@ -149,6 +151,19 @@ class TermTable:
             return False
         return True
 
+    def __mul__(self, o):
+        """Multiple two term tables to get the product table
+
+        WARNING: Do not multiply term tables coming from the same subshell
+
+        TODO: Fill out table
+        """
+        max_mult = self.max_mult + o.max_mult - 1
+        max_am = self.max_am + o.max_am
+        t = TermTable(max_mult, max_am)
+
+        return t
+
     def get(self, mult, am):
         return self.table[(mult - 1) // 2][am]
 
@@ -190,8 +205,8 @@ class TermTable:
             line = '{:>3} ' + '& {:>6} '*self.width + '\\\\ \n'
             for i, row in reversed(list(enumerate(self.table))):
                 mult = self.min_mult + i*2 + 1
-                symbs = [TermSymbol.latex(mult, am) for am in range(len(row))]
-                out += line.format(mult, *symbs)
+                symbols = [TermSymbol.latex(mult, am) for am in range(len(row))]
+                out += line.format(mult, *symbols)
             out += '\\end{tabular}'
 
         elif style == 'latex-crossed':
@@ -230,3 +245,39 @@ def subshell_terms(shell, l, e_num):
         t.increment(int(2*spin + 1), am)
 
     return t
+
+
+def multiple_subshell_terms(*subshells):
+    """Subshells is a list of tuples of the form
+    (shell, l, e_num)
+    """
+
+    if len(subshells) == 0:
+        return TermTable(0, 0)
+
+    occupied = []
+    max_am = 0
+    max_mult = -len(subshells) + 1
+    for shell, l, e_num in subshells:
+        max_am += l * e_num
+        if e_num <= 2*l + 1:
+            max_mult += e_num + 1
+        else:
+            max_mult += 4*l + 3 - e_num
+        occupied.append(list(occupy(shell, l, e_num)))
+
+    t = TermTable(max_mult, max_am)
+    for comb in product(*occupied):
+        am = 0
+        spin = 0
+        for subshell in comb:
+            am_s, spin_s = calc_vals(subshell)
+            am += am_s
+            spin += spin_s
+
+        if am < 0 or spin < 0:
+            continue
+        t.increment(int(2*spin + 1), am)
+
+    return t
+

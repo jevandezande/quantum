@@ -81,5 +81,37 @@ def test_subshell_terms_and_clean():
     p2_terms = subshell_terms(2, 1, 2)
     np_assert_equal(p2_terms.table, p2_table)
     np_assert_equal(p2_terms.cleaned().table, np.array([[1, 0, 1], [0, 1, 0]]))
-    d3_terms = subshell_terms(3, 2, 3)
-    print(d3_terms.cleaned().string('latex-crossed'))
+
+
+def test_terms_table_string():
+    s2_string = '\\begin{tabular}{ r | c } \nM\\L &          0 \\hl \n  2 &  '\
+                + '\\O{$^2$S} \\\\ \n\\end{tabular}'
+    s2_terms = subshell_terms(3, 0, 2)
+    assert_equal(s2_terms.cleaned().string('latex-crossed'), s2_string)
+
+
+def test_mult():
+    s2_terms = subshell_terms(3, 0, 2)
+    s1_terms = subshell_terms(3, 0, 2)
+
+    mult_1s2 = multiple_subshell_terms((1, 0, 2))
+    assert_equal(mult_1s2.max_mult, 1)
+    assert_equal(mult_1s2.max_am, 0)
+    np_assert_equal(mult_1s2.table, [[1]])
+
+    mult_1s1_2s1_3s2 = multiple_subshell_terms((1, 0, 1), (2, 0, 1), (3, 0, 2))
+    assert_equal(mult_1s1_2s1_3s2.max_mult, 3)
+    assert_equal(mult_1s1_2s1_3s2.max_am, 0)
+    table = np.array([[2], [1]])
+    np_assert_equal(mult_1s1_2s1_3s2.table, table)
+
+
+def test_mult_long():
+    mult_1s1_2p2_3d3 = multiple_subshell_terms((1, 0, 1), (2, 1, 2), (3, 2, 3))
+    assert_equal(mult_1s1_2p2_3d3.max_mult, 7)
+    assert_equal(mult_1s1_2p2_3d3.max_am, 8)
+    t = np.array([[196, 182, 148, 102,  60,  28,  10,   2,   0],
+                  [138, 128, 103,  70,  40,  18,   6,   1,   0],
+                  [46,   42,  33,  21,  11,   4,   1,   0,   0],
+                  [6,     5,   4,   2,   1,   0,   0,   0,   0]])
+    np_assert_equal(mult_1s1_2p2_3d3.table, t)
