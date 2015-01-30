@@ -1,6 +1,7 @@
 from nose.tools import *
 from quantum.term_symbols import *
 from fractions import Fraction
+from numpy.testing import assert_equal as np_assert_equal
 
 
 def setup():
@@ -55,21 +56,22 @@ def test_calc_vals_and_term_symbol():
     occ1 = list(occupy(1, 0, 1))
     assert_equal(calc_vals(occ1[0]), (0, Frac(1, 2)))
     assert_equal(calc_vals(occ1[1]), (0, Frac(-1, 2)))
-    assert_equal(find_term_symbol(occ1[0]), '2S')
+    assert_equal(find_term_symbol(occ1[0]), TermSymbol(2, 0))
 
     orbs1 = [SpinOrbital(3, 2, -2, 'alpha'), SpinOrbital(5, 4, -1, 'beta')]
     assert_equal(calc_vals(orbs1), (-3, 0))
-    assert_equal(find_term_symbol(orbs1), '1F')
+    assert_equal(find_term_symbol(orbs1), TermSymbol(1, 3))
 
 
 def test_terms_table():
     a = TermTable(2, 1)
     a.set(1, 1, 5)
+    assert_equal(a.get(1, 1), 5)
 
 
 def test_subshell_terms_and_clean():
-    s2_table = TermTable(0, 0)
-    s2_table.set(0, 0, 1)
+    s2_table = TermTable(1, 0)
+    s2_table.set(1, 0, 1)
     s2_terms = subshell_terms(1, 0, 2)
     assert_equal(s2_terms, s2_table)
     s2_terms.clean_table()
@@ -78,7 +80,7 @@ def test_subshell_terms_and_clean():
     p2_table = TermTable(2, 1)
     p2_table.table = np.array([[3, 2, 1], [1, 1, 0]])
     p2_terms = subshell_terms(2, 1, 2)
-    assert_equal(p2_terms, p2_table)
+    np_assert_equal(p2_terms.table, p2_table.table)
     p2_terms.clean_table()
     p2_table.table = np.array([[1, 0, 1], [0, 1, 0]])
-    assert_equal(p2_terms, p2_table)
+    np_assert_equal(p2_terms.table, p2_table.table)

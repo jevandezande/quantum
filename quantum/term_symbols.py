@@ -75,18 +75,18 @@ def calc_vals(orbs):
     """Calculate the total angular momentum and spin
     WARNING: It does not check if the set of orbitals is valid
     """
-    ang = 0
+    am = 0
     spin = 0
     for orb in orbs:
-        ang += orb.ml
+        am += orb.ml
         spin += orb.spin
 
-    return ang, spin
+    return am, spin
 
 
 class TermSymbol:
-    def __init__(self, am, mult):
-        self.am = am
+    def __init__(self, mult, am):
+        self.am = abs(am)
         self.mult = mult
 
     def __str__(self):
@@ -96,32 +96,28 @@ class TermSymbol:
     def __repr__(self):
         return str(self)
 
-
-
-def term_symbol(ang, spin):
-    """Write the associated term symbol for the given state"""
-    mult = 2*abs(spin) + 1
-    symbols = 'SPDFGHKLMN'
-
-    return '{}{}'.format(mult, symbols[abs(ang)])
+    def __eq__(self, o):
+        if self.am == o.am and self.mult == o.mult:
+            return True
+        return False
 
 
 def find_term_symbol(orbs, latex=False):
     """Generate the term symbol for the given set of orbitals
     WARNING: It does not check if the set of orbitals is valid
     """
-    ang, spin = calc_vals(orbs)
-    return term_symbol(ang, spin)
+    am, spin = calc_vals(orbs)
+    return TermSymbol(2*spin + 1, am)
 
 
 class TermTable:
-    def __init__(self, max_am, max_spin):
+    def __init__(self, max_mult, max_am):
         self.max_am = max_am
         self.width = max_am + 1
-        self.max_spin = max_spin
-        self.min_spin = max_spin % 1
-        self.height = int(max_spin) + 1
-        self.table = np.zeros((self.height, self.width))
+        self.max_mult = max_mult
+        self.min_mult = max_mult % 2
+        self.height = (max_mult + 1) // 2
+        self.table = np.zeros((self.height, self.width), dtype=np.dtype(int))
         # TODO: add combinations to each term
         self.combs = {}
 
@@ -130,20 +126,20 @@ class TermTable:
         return str(self.table[::-1])
 
     def __eq__(self, o):
-        if self.max_am != o.max_am or self.max_spin != o.max_spin:
+        if self.max_am != o.max_am or self.max_mult != o.max_mult:
             return False
         if not (self.table == o.table).all():
             return False
         return True
 
-    def get(self, am, spin):
-        return self.table[int(spin)][am]
+    def get(self, mult, am):
+        return self.table[(mult - 1) // 2][am]
 
-    def set(self, am, spin, val):
-        self.table[int(spin)][am] = val
+    def set(self, mult, am, val):
+        self.table[(mult - 1) // 2][am] = val
 
-    def increment(self, am, spin):
-        self.table[int(spin)][am] += 1
+    def increment(self, mult, am):
+        self.table[(mult - 1) // 2][am] += 1
 
     def clean_table(self):
         """Remove all the lower manifestations of terms
@@ -154,18 +150,28 @@ class TermTable:
                 self.table[:i+1, :j+1] -= count
                 self.table[i, j] = count
 
+    def print(self, style='table'):
+        """Print the table in a nice format"""
+        out = ''
+        if style == 'table':
+            line = '{}' + '{:<4}'*len(self.table[0])
+            for i, row in enumerate(self.table):
+                out += line.format(i, *row)
+
+        print(out)
+
 
 def subshell_terms(shell, l, e_num):
     max_am = l*e_num
     if e_num <= 2*l + 1:
-        max_spin = Frac(e_num, 2)
+        max_mult = e_num + 1
     else:
-        max_spin = Frac(4*l+2 - e_num)
-    t = TermTable(max_am, max_spin)
+        max_mult = 4*l + 3 - e_num
+    t = TermTable(max_mult, max_am)
     for comb in occupy(shell, l, e_num):
         am, spin = calc_vals(comb)
         if am < 0 or spin < 0:
             continue
-        t.increment(am, spin)
+        t.increment(int(2*spin + 1), am)
 
     return t
