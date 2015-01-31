@@ -3,8 +3,8 @@ from fractions import Fraction as Frac
 import numpy as np
 from copy import deepcopy
 
-AM_SYMBOLS = 'spdfghklmn'
-AM_SYMBOLS_UP = 'SPDFGHKLMN'
+AM_SYMBOLS = 'spdfghklmnoqrtuvwxyz'
+AM_SYMBOLS_UP = 'SPDFGHKLMNOQRTUVWXYZ'
 
 
 class SpinOrbital:
@@ -134,7 +134,7 @@ class TermTable:
         self.max_am = max_am
         self.width = max_am + 1
         self.max_mult = max_mult
-        self.min_mult = max_mult % 2
+        self.min_mult = (max_mult + 1) % 2 + 1
         self.height = (max_mult + 1) // 2
         self.table = np.zeros((self.height, self.width), dtype=np.dtype(int))
         # TODO: add combinations to each term
@@ -194,7 +194,7 @@ class TermTable:
             out += '-'*(4 + 4*self.width) + '\n'
             line = '{:> 3}|' + ' {:> 3}'*self.width + '\n'
             for i, row in reversed(list(enumerate(self.table))):
-                mult = self.min_mult + i*2 + 1
+                mult = self.min_mult + i*2
                 out += line.format(mult, *row)
                 out += '-'*(4 + 4*self.width) + '\n'
 
@@ -204,7 +204,7 @@ class TermTable:
             out += top_line.format(*list(range(self.width)))
             line = '{:>3} ' + '& {:>6} '*self.width + '\\\\ \n'
             for i, row in reversed(list(enumerate(self.table))):
-                mult = self.min_mult + i*2 + 1
+                mult = self.min_mult + i*2
                 symbols = [TermSymbol.latex(mult, am) for am in range(len(row))]
                 out += line.format(mult, *symbols)
             out += '\\end{tabular}'
@@ -215,7 +215,7 @@ class TermTable:
             out += top_line.format(*list(range(self.width)))
             t_form = '& {:>10} '
             for i, row in reversed(list(enumerate(self.table))):
-                mult = self.min_mult + i*2 + 1
+                mult = self.min_mult + i*2
                 out += '{:>3} '.format(mult)
                 for am in range(len(row)):
                     symb = TermSymbol.latex(mult, am)
@@ -226,6 +226,16 @@ class TermTable:
                     else:
                         out += t_form.format('\\' + 'O'*count + '{' + t + '}')
                 out += '\\\\ \n'
+            out += '\\end{tabular}'
+
+        elif style == 'latex-table':
+            out += '\\begin{tabular}{ r |' + ' c'*self.width + ' } \n'
+            top_line = 'M\\L ' + '& {:>3} '*self.width + '\\hl \n'
+            out += top_line.format(*AM_SYMBOLS_UP)
+            line = '{:>3} ' + '& {:>3} '*self.width + '\\\\ \n'
+            for i, row in reversed(list(enumerate(self.table))):
+                mult = self.min_mult + i*2
+                out += line.format(mult, *row)
             out += '\\end{tabular}'
 
         return out

@@ -84,8 +84,8 @@ def test_subshell_terms_and_clean():
 
 
 def test_terms_table_string():
-    s2_string = '\\begin{tabular}{ r | c } \nM\\L &          0 \\hl \n  2 &  '\
-                + '\\O{$^2$S} \\\\ \n\\end{tabular}'
+    s2_string = '\\begin{tabular}{ r | c } \nM\\L &          0 \\hl \n  1 &  '\
+                + '\\O{$^1$S} \\\\ \n\\end{tabular}'
     s2_terms = subshell_terms(3, 0, 2)
     assert_equal(s2_terms.cleaned().string('latex-crossed'), s2_string)
 
