@@ -54,11 +54,6 @@ class SpinOrbital:
         return False
 
 
-def subshell_iterator(shell, l):
-    """Iterate through all the orbitals in the specified subshell"""
-    # iterate from highest to lowest m_l
-
-
 def spin_iterator():
     """Iterate through alpha (1/2) and beta (-1/2) spins"""
     yield Frac(1, 2)
@@ -66,19 +61,27 @@ def spin_iterator():
 
 
 def spin_orbitals_iterator(shell, l):
+    """Makes an iterator over all orbitals in the specified subshell
+    :param shell: orbital shell
+    :param l: angular momentum of the desired subshell
+    """
     for ml in range(l, -l-1, -1):
         for spin in [Frac(1, 2), Frac(-1, 2)]:
             yield SpinOrbital(shell, l, ml, spin)
 
 
 def occupy(shell, l, e_num):
-    """Make an iterator of all possible combinations"""
+    """Make an iterator of all possible combinations
+    :param shell: orbital shell
+    :param l: angular momentum of the desired subshell
+    :param e_num: number of electrons
+    """
     return combinations(spin_orbitals_iterator(shell, l), e_num)
 
 
 def calc_vals(orbs):
     """Calculate the total angular momentum and spin
-    WARNING: It does not check if the set of orbitals is valid
+    :param orbs: an iterator containing SpinOrbitals
     """
     am = 0
     spin = 0
@@ -90,7 +93,12 @@ def calc_vals(orbs):
 
 
 class TermSymbol:
+    """Quantum term symbol class for atoms"""
     def __init__(self, mult, am):
+        """
+        :param mult: multiplicity of the term symbol
+        :param am: angular momentum of the term symbol
+        """
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity and angular momentum must be ints")
         self.am = abs(am)
@@ -109,20 +117,25 @@ class TermSymbol:
 
     @staticmethod
     def check(mult, am):
+        """Check if the multiplicity and angular momentum are valid"""
         if not isinstance(mult, int) or mult < 1 or not isinstance(am, int):
             return False
         return True
 
     @staticmethod
     def latex(mult, am):
-        """Return a latex based representation of the term symbol"""
+        """Return a latex based representation of the term symbol
+        :param mult: multiplicity of the term symbol
+        :param am: angular momentum of the term symbol
+        """
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity and angular momentum must be ints")
         return "$^{}${}".format(mult, AM_SYMBOLS_UP[am])
 
 
-def find_term_symbol(orbs, latex=False):
+def find_term_symbol(orbs):
     """Generate the term symbol for the given set of orbitals
+    :param orbs: an iterable containing SpinOrbitals
     WARNING: It does not check if the set of orbitals is valid
     """
     am, spin = calc_vals(orbs)
@@ -130,7 +143,18 @@ def find_term_symbol(orbs, latex=False):
 
 
 class TermTable:
+    """A table that contains the number of terms at a specified multiplicity and
+    angular momentum.
+
+    Can remove all manifestations of terms at lower multiplicity or angular
+    momentum. Thus producing the standard scorecard.
+    """
     def __init__(self, max_mult, max_am):
+        """Set up the table
+
+        :param max_mult: maximum possible multiplicity
+        :param max_am: maximum possible angular momentum
+        """
         self.max_am = max_am
         self.width = max_am + 1
         self.max_mult = max_mult
@@ -141,7 +165,7 @@ class TermTable:
         self.combs = {}
 
     def __str__(self):
-        """Flip the table for printing"""
+        """Flips the table for printing in standard form"""
         return str(self.table[::-1])
 
     def __eq__(self, o):
@@ -165,17 +189,22 @@ class TermTable:
         return t
 
     def get(self, mult, am):
+        """Get the value at the specified mult and am"""
         return self.table[(mult - 1) // 2][am]
 
     def set(self, mult, am, val):
+        """Set the value at the specified mult and am"""
         self.table[(mult - 1) // 2][am] = val
 
     def increment(self, mult, am):
+        """Increment the value at the specified mult and am"""
         self.table[(mult - 1) // 2][am] += 1
 
     def cleaned(self):
         """Create a new TermTable with all lower manifestations of terms removed
-        i.e. subtract the value of (a,b) from other terms where x<=a, y<=b"""
+        i.e. subtract the value of (a,b) from other terms where x<=a, y<=b
+        :returns TermTable:
+        """
         cleaned = deepcopy(self)
         for i in reversed(range(len(cleaned.table))):
             for j in reversed(range(len(cleaned.table[0]))):
@@ -186,7 +215,10 @@ class TermTable:
         return cleaned
 
     def string(self, style='table'):
-        """Print the table in a nice format"""
+        """Print the table in a nice format
+        :param style: the style the table should be output in
+                        table, latex, latex-crossed, latex-table
+        """
         out = ''
         if style == 'table':
             top_line = 'M\\L|' + ' {:> 3}'*self.width + '\n'
@@ -242,6 +274,9 @@ class TermTable:
 
 
 def subshell_terms(shell, l, e_num):
+    """Iterate over all possible combinations of electrons in orbitals
+    :returns: TermTable
+    """
     max_am = l*e_num
     if e_num <= 2*l + 1:
         max_mult = e_num + 1
@@ -258,8 +293,9 @@ def subshell_terms(shell, l, e_num):
 
 
 def multiple_subshell_terms(*subshells):
-    """Subshells is a list of tuples of the form
-    (shell, l, e_num)
+    """Iterate over all possible combinations of electrons in orbitals
+    :param subshells:  an iterable where each term is (shell, l, e_num)
+    :returns: TermTable
     """
 
     if len(subshells) == 0:
@@ -290,4 +326,3 @@ def multiple_subshell_terms(*subshells):
         t.increment(int(2*spin + 1), am)
 
     return t
-
