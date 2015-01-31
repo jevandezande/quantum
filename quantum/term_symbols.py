@@ -326,3 +326,16 @@ def multiple_subshell_terms(*subshells):
         t.increment(int(2*spin + 1), am)
 
     return t
+
+
+def all_term_tables(max_am):
+    """Iterate through all the TermTables up to a specified angular momentum
+
+    Since particle-hole equivalence makes the term symbol tables symmetric
+    around the point where the number of electrons equals 2*am +1
+    e.g. d^2 is equivalent to d^8
+    """
+
+    for am in range(max_am):
+        for e_num in range(1, 2*am + 2):
+            yield subshell_terms(am + 1, am, e_num)

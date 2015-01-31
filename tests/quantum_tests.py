@@ -124,3 +124,13 @@ def test_mult_long():
          [3,  8, 10,  9,  6,  3,  1,  0,  0],
          [1,  1,  2,  1,  1,  0,  0,  0,  0]]
     np_assert_equal(mult_1s1_2p2_3d3.cleaned().table, c)
+
+
+def test_all_term_tables():
+    tables = all_term_tables(2)
+    one_s1 = subshell_terms(1, 0, 1)
+    assert_equal(next(tables), one_s1)
+    two_p1 = subshell_terms(2, 1, 1)
+    assert_equal(next(tables), two_p1)
+    two_p2 = subshell_terms(2, 1, 2)
+    assert_equal(next(tables), two_p2)
