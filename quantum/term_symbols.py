@@ -3,8 +3,8 @@ from fractions import Fraction as Frac
 import numpy as np
 from copy import deepcopy
 
-AM_SYMBOLS = 'spdfghklmnoqrtuvwxyz'
-AM_SYMBOLS_UP = 'SPDFGHKLMNOQRTUVWXYZ'
+AM_SYMBOLS = 'spdfghiklmnoqrtuvwxyz'
+AM_SYMBOLS_UP = 'SPDFGHIKLMNOQRTUVWXYZ'
 
 
 class SpinOrbital:
@@ -178,15 +178,42 @@ class TermTable:
     def __mul__(self, o):
         """Multiple two term tables to get the product table
 
-        WARNING: Do not multiply term tables coming from the same subshell
+        WARNING: Do not multiply TermTables coming from the same subshell
+        WARNING: Do not multiply TermTables that have not been cleaned
 
         TODO: Fill out table
         """
+        if not isinstance(o, TermTable):
+            raise SyntaxError("Can only multiply a TermTable by a TermTable")
         max_mult = self.max_mult + o.max_mult - 1
         max_am = self.max_am + o.max_am
         t = TermTable(max_mult, max_am)
 
+        for i, row in enumerate(self.table):
+            for j, count in enumerate(row):
+                mult = self.min_mult + 2*i
+                am = j
+                for k, o_row in enumerate(o.table):
+                    for l, o_count in enumerate(o_row):
+                        o_mult = o.min_mult + 2*i
+                        o_am = l
+                        t.add(mult + o_mult - 1, am + o_am, count * o_count)
+
+                        print(mult, am, o_mult, o_am)
+                        if mult > 1 and o_mult > 1 and mult + o_mult > 3:
+                            print("HEY")
+                            t.add(abs(mult - o_mult + 1), am + o_am, count * o_count)
+                            print(abs(mult - o_mult + 1), am + o_am, count * o_count)
+                        if am > 0 and o_am > 0:
+                            print("HEY1")
+                            t.add(mult + o_mult - 1, abs(am - o_am), count * o_count)
+                            if mult > 1 and o_mult > 1 and mult + o_mult > 3:
+                                print("HEY2")
+                                t.add(abs(mult - o_mult + 1), abs(am - o_am), count * o_count)
+
         return t
+
+    __rmul__ = __mul__
 
     def get(self, mult, am):
         """Get the value at the specified mult and am"""
@@ -195,6 +222,10 @@ class TermTable:
     def set(self, mult, am, val):
         """Set the value at the specified mult and am"""
         self.table[(mult - 1) // 2][am] = val
+
+    def add(self, mult, am, val):
+        """Set the value at the specified mult and am"""
+        self.table[(mult - 1) // 2][am] += val
 
     def increment(self, mult, am):
         """Increment the value at the specified mult and am"""
@@ -263,7 +294,7 @@ class TermTable:
         elif style == 'latex-table':
             out += '\\begin{tabular}{ r |' + ' c'*self.width + ' } \n'
             top_line = 'M\\L ' + '& {:>3} '*self.width + '\\hl \n'
-            out += top_line.format(*AM_SYMBOLS_UP)
+            out += top_line.format(*list(range(self.width)))
             line = '{:>3} ' + '& {:>3} '*self.width + '\\\\ \n'
             for i, row in reversed(list(enumerate(self.table))):
                 mult = self.min_mult + i*2

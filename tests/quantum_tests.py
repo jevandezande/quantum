@@ -90,10 +90,26 @@ def test_terms_table_string():
     assert_equal(s2_terms.cleaned().string('latex-crossed'), s2_string)
 
 
-def test_mult():
-    s2_terms = subshell_terms(3, 0, 2)
-    s1_terms = subshell_terms(3, 0, 2)
+def test_mul():
+    two_s1_terms = subshell_terms(2, 0, 1)
+    three_s1_terms = subshell_terms(3, 0, 1)
+    print(two_s1_terms.string())
+    print(three_s1_terms.string())
+    print(two_s1_terms * three_s1_terms)
+    print(multiple_subshell_terms((2, 0, 1), (3, 0, 1)).cleaned())
 
+    two_p1_terms = subshell_terms(2, 1, 1).cleaned()
+    three_p1_terms = subshell_terms(3, 1, 1).cleaned()
+    print(two_p1_terms.string())
+    print(three_p1_terms.string())
+    mul = two_p1_terms * three_p1_terms
+    print(mul)
+    multi_subshell = multiple_subshell_terms((2, 1, 1), (3, 1, 1))
+    print(multi_subshell)
+    np_assert_equal(mul.table, multi_subshell.cleaned().table)
+
+
+def test_multiple_shubshell_terms():
     mult_1s2 = multiple_subshell_terms((1, 0, 2))
     assert_equal(mult_1s2.max_mult, 1)
     assert_equal(mult_1s2.max_am, 0)
@@ -109,21 +125,21 @@ def test_mult():
     np_assert_equal(mult_1s1_2s1_3s2.cleaned().table, cleaned)
 
 
-def test_mult_long():
-    mult_1s1_2p2_3d3 = multiple_subshell_terms((1, 0, 1), (2, 1, 2), (3, 2, 3))
-    assert_equal(mult_1s1_2p2_3d3.max_mult, 7)
-    assert_equal(mult_1s1_2p2_3d3.max_am, 8)
-    t = np.array([[196, 182, 148, 102,  60,  28,  10,   2,   0],
-                  [138, 128, 103,  70,  40,  18,   6,   1,   0],
-                  [46,   42,  33,  21,  11,   4,   1,   0,   0],
-                  [6,     5,   4,   2,   1,   0,   0,   0,   0]])
-    np_assert_equal(mult_1s1_2p2_3d3.table, t)
-
-    c = [[4,  9, 13, 12, 10,  6,  3,  1,  0],
-         [6, 16, 21, 20, 15,  9,  4,  1,  0],
-         [3,  8, 10,  9,  6,  3,  1,  0,  0],
-         [1,  1,  2,  1,  1,  0,  0,  0,  0]]
-    np_assert_equal(mult_1s1_2p2_3d3.cleaned().table, c)
+#def test_mult_long():
+#    mult_1s1_2p2_3d3 = multiple_subshell_terms((1, 0, 1), (2, 1, 2), (3, 2, 3))
+#    assert_equal(mult_1s1_2p2_3d3.max_mult, 7)
+#    assert_equal(mult_1s1_2p2_3d3.max_am, 8)
+#    t = np.array([[196, 182, 148, 102,  60,  28,  10,   2,   0],
+#                  [138, 128, 103,  70,  40,  18,   6,   1,   0],
+#                  [46,   42,  33,  21,  11,   4,   1,   0,   0],
+#                  [6,     5,   4,   2,   1,   0,   0,   0,   0]])
+#    np_assert_equal(mult_1s1_2p2_3d3.table, t)
+#
+#    c = [[4,  9, 13, 12, 10,  6,  3,  1,  0],
+#         [6, 16, 21, 20, 15,  9,  4,  1,  0],
+#         [3,  8, 10,  9,  6,  3,  1,  0,  0],
+#         [1,  1,  2,  1,  1,  0,  0,  0,  0]]
+#    np_assert_equal(mult_1s1_2p2_3d3.cleaned().table, c)
 
 
 def test_all_term_tables():
