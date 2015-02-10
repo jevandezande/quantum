@@ -112,14 +112,14 @@ def test_calc_vals_and_term_symbol():
 
 
 def test_atomic_terms_table():
-    a = TermTable(2, 1)
+    a = AtomicTermTable(2, 1)
     a.set(1, 1, 5)
     assert_equal(a.get(1, 1), 5)
     p2_terms = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 2)
 
 
 def test_subshell_terms_and_clean():
-    s2_table = TermTable(1, 0)
+    s2_table = AtomicTermTable(1, 0)
     s2_table.set(1, 0, 1)
     s2_terms = subshell_terms(atomic_spinorbitals_iterator, 1, 0, 2)
     assert_equal(s2_terms, s2_table)

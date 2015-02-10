@@ -143,18 +143,27 @@ def calc_vals(orbs):
 
 class TermSymbol:
     """Quantum term symbol class for atoms"""
-    def __init__(self, mult, am):
+    def __init__(self, mult, am, orbital_type='atomic'):
         """
         :param mult: multiplicity of the term symbol
         :param am: angular momentum of the term symbol
+        :param orbital_type: the type of orbitals that are used (i.e. atomic or
+            molecular)
         """
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity and angular momentum must be ints")
         self.am = abs(am)
         self.mult = mult
+        if orbital_type == 'atomic':
+            self.am_symbols = ATOMIC_AM_SYMBOLS
+        elif orbital_type == 'diatomic':
+            self.am_symbols = DIATOMIC_AM_SYMBOLS
+        else:
+            raise SyntaxError("Only atomic and molecular orbitals are currently"
+                              "supported")
 
     def __str__(self):
-        return '{}{}'.format(self.mult, ATOMIC_AM_SYMBOLS_UP[abs(self.am)])
+        return '{}{}'.format(self.mult, self.am_symbols[abs(self.am)])
 
     def __repr__(self):
         return str(self)
@@ -192,12 +201,6 @@ def find_term_symbol(orbs):
 
 
 class TermTable:
-    """A table that contains the number of terms at a specified multiplicity and
-    angular momentum.
-
-    Can remove all manifestations of terms at lower multiplicity or angular
-    momentum. Thus producing the standard scorecard.
-    """
     def __init__(self, max_mult, max_am):
         """Set up the table
 
@@ -210,8 +213,6 @@ class TermTable:
         self.min_mult = (max_mult + 1) % 2 + 1
         self.height = (max_mult + 1) // 2
         self.table = np.zeros((self.height, self.width), dtype=np.dtype(int))
-        # TODO: add combinations to each term
-        self.combs = {}
 
     def __str__(self):
         """Flips the table for printing in standard form"""
@@ -232,7 +233,7 @@ class TermTable:
 
         TODO: Fill out table
         """
-        if not isinstance(o, TermTable):
+        if not isinstance(o, TermTable) or type(self) != type(o):
             raise SyntaxError("Can only multiply a TermTable by a TermTable")
         max_mult = self.max_mult + o.max_mult - 1
         max_am = self.max_am + o.max_am
@@ -274,20 +275,6 @@ class TermTable:
     def increment(self, mult, am):
         """Increment the value at the specified mult and am"""
         self.table[(mult - 1) // 2][am] += 1
-
-    def cleaned(self):
-        """Create a new TermTable with all lower manifestations of terms removed
-        i.e. subtract the value of (a,b) from other terms where x<=a, y<=b
-        :returns TermTable:
-        """
-        cleaned = deepcopy(self)
-        for i in reversed(range(len(cleaned.table))):
-            for j in reversed(range(len(cleaned.table[0]))):
-                count = cleaned.table[i, j]
-                cleaned.table[:i+1, :j+1] -= count
-                cleaned.table[i, j] = count
-
-        return cleaned
 
     def string(self, style='table'):
         """Print the table in a nice format
@@ -348,20 +335,43 @@ class TermTable:
         return out
 
 
+class AtomicTermTable(TermTable):
+    """A table that contains the number of terms at a specified multiplicity and
+    angular momentum.
+
+    Can remove all manifestations of terms at lower multiplicity or angular
+    momentum. Thus producing the standard scorecard.
+    """
+
+    def cleaned(self):
+        """Create a new AtomicTermTable with all lower manifestations of terms removed
+        i.e. subtract the value of (a,b) from other terms where x<=a, y<=b
+        :returns AtomicTermTable:
+        """
+        cleaned = deepcopy(self)
+        for i in reversed(range(len(cleaned.table))):
+            for j in reversed(range(len(cleaned.table[0]))):
+                count = cleaned.table[i, j]
+                cleaned.table[:i+1, :j+1] -= count
+                cleaned.table[i, j] = count
+
+        return cleaned
+
+
 def subshell_terms(iter_func, shell, l, e_num):
     """Iterate over all possible combinations of electrons in orbitals
     :param iter_func: orbital iterator function
     :param shell: orbital shell
     :param l: orbital angular momentum
     :param e_num: number of electrons
-    :returns: TermTable
+    :returns: AtomicTermTable
     """
     max_am = l*e_num
     if e_num <= 2*l + 1:
         max_mult = e_num + 1
     else:
         max_mult = 4*l + 3 - e_num
-    t = TermTable(max_mult, max_am)
+    t = AtomicTermTable(max_mult, max_am)
     iterator = iter_func(shell, l)
     for comb in occupy(iterator, e_num):
         am, spin = calc_vals(comb)
@@ -376,11 +386,11 @@ def multiple_subshell_terms(*subshells):
     """Iterate over all possible combinations of electrons in orbitals
     Currently only for atomic orbitals
     :param subshells:  an iterable where each term is (shell, l, e_num)
-    :returns: TermTable
+    :returns: AtomicTermTable
     """
 
     if len(subshells) == 0:
-        return TermTable(0, 0)
+        return AtomicTermTable(0, 0)
 
     occupied = []
     max_am = 0
@@ -394,7 +404,7 @@ def multiple_subshell_terms(*subshells):
         iterator = atomic_spinorbitals_iterator(shell, l)
         occupied.append(list(occupy(iterator, e_num)))
 
-    t = TermTable(max_mult, max_am)
+    t = AtomicTermTable(max_mult, max_am)
     for comb in product(*occupied):
         am = 0
         spin = 0
@@ -411,7 +421,7 @@ def multiple_subshell_terms(*subshells):
 
 
 def all_atomic_term_tables(max_am):
-    """Iterate through all the TermTables up to a specified angular momentum
+    """Iterate through all the AtomicTermTables up to a specified angular momentum
 
     Since particle-hole equivalence makes the term symbol tables symmetric
     around the point where the number of electrons equals 2*am +1
