@@ -99,13 +99,23 @@ def spin_iterator():
 
 
 def spin_orbitals_iterator(shell, l):
-    """Makes an iterator over all orbitals in the specified subshell
+    """Makes an iterator over all SpinOrbitals in the specified subshell
     :param shell: orbital shell
     :param l: angular momentum of the desired subshell
     """
     for ml in range(l, -l-1, -1):
         for spin in [Frac(1, 2), Frac(-1, 2)]:
             yield AtomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
+
+
+def molecular_spinorbitals_iterator(shell, l):
+    """Makes an iterator over all MolecularSpinOrbitals in specified subshell
+    :param shell: orbital shell
+    :param l: angular momentum of the desired subshell
+    """
+    for ml in [l, -l]:
+        for spin in [Frac(1, 2), Frac(-1, 2)]:
+            yield MolecularSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
 def occupy(shell, l, e_num):
@@ -119,7 +129,7 @@ def occupy(shell, l, e_num):
 
 def calc_vals(orbs):
     """Calculate the total angular momentum and spin
-    :param orbs: an iterator containing SpinOrbitals
+    :param orbs: an iterator containing Orbitals
     """
     am = 0
     spin = 0

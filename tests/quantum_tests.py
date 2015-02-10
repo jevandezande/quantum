@@ -12,7 +12,7 @@ def teardown():
     pass
 
 
-def test_spinorbital():
+def test_atomic_spinorbital():
     one_s1a = AtomicSpinOrbital(n=1, l=0, ml=0, spin=1)
     assert_equal(one_s1a.__repr__(), '1s_{0}a')
     five_g2b = AtomicSpinOrbital(n=5, l=4, ml=2, spin='beta')
@@ -23,7 +23,7 @@ def test_spinorbital():
     assert_raises(SyntaxError, AtomicSpinOrbital.__init__, a, 2, 1, 1, 'q')
 
 
-def test_molecularspinorbital():
+def test_molecular_spinorbital():
     one_s1a = MolecularSpinOrbital(n=1, l=0, ml=0, spin=1)
     assert_equal(one_s1a.__repr__(), '1σ_{0}a')
     five_g2b = MolecularSpinOrbital(n=1, l=4, ml=2, spin='beta')
@@ -39,10 +39,16 @@ def test_spin_iterator():
     assert_equal(list(spin_iterator()), [a, b])
 
 
-def test_spin_orbitals_iterator():
+def test_atomic_spin_orbitals_iterator():
     p_orbs = ['2p_{1}a', '2p_{1}b', '2p_{0}a', '2p_{0}b', '2p_{-1}a', '2p_{-1}b']
     p_l = list(map(str, spin_orbitals_iterator(2, 1)))
     assert_equal(p_l, p_orbs)
+
+
+def test_molecular_spin_orbitals_iterator():
+    pi_orbs = ['2π_{1}a', '2π_{1}b', '2π_{-1}a', '2π_{-1}b']
+    pi_l = list(map(str, molecular_spinorbitals_iterator(2, 1)))
+    assert_equal(pi_l, pi_orbs)
 
 
 def test_occupy():
