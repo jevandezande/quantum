@@ -13,14 +13,24 @@ def teardown():
 
 
 def test_spinorbital():
-    one_s1a = SpinOrbital(1, 0, 0, 1)
+    one_s1a = AtomicSpinOrbital(n=1, l=0, ml=0, spin=1)
     assert_equal(one_s1a.__repr__(), '1s_{0}a')
-    five_g2b = SpinOrbital(5, 4, 2, 'beta')
+    five_g2b = AtomicSpinOrbital(n=5, l=4, ml=2, spin='beta')
     assert_equal(five_g2b.__repr__(), '5g_{2}b')
     a = one_s1a
-    assert_raises(SyntaxError, SpinOrbital.__init__, a, 2, 2, 1, 1)
-    assert_raises(SyntaxError, SpinOrbital.__init__, a, 2, 1, 2, 1)
-    assert_raises(SyntaxError, SpinOrbital.__init__, a, 2, 1, 1, 'q')
+    assert_raises(SyntaxError, AtomicSpinOrbital.__init__, a, 2, 2, 1, 1)
+    assert_raises(SyntaxError, AtomicSpinOrbital.__init__, a, 2, 1, 2, 1)
+    assert_raises(SyntaxError, AtomicSpinOrbital.__init__, a, 2, 1, 1, 'q')
+
+
+def test_molecularspinorbital():
+    one_s1a = MolecularSpinOrbital(n=1, l=0, ml=0, spin=1)
+    assert_equal(one_s1a.__repr__(), '1σ_{0}a')
+    five_g2b = MolecularSpinOrbital(n=1, l=4, ml=2, spin='beta')
+    assert_equal(five_g2b.__repr__(), '1γ_{2}b')
+    a = one_s1a
+    assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 1, 2, 1)
+    assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 1, 1, 'q')
 
 
 def test_spin_iterator():
@@ -41,11 +51,11 @@ def test_occupy():
     assert_equal(list(occupy(2, 1, 0)), [()])
 
     occ1 = list(occupy(1, 0, 1))
-    assert_equal(occ1[0][0], SpinOrbital(1, 0, 0, 'alpha'))
+    assert_equal(occ1[0][0], AtomicSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
     assert_equal(len(occ1), 2)
 
     occ2 = list(occupy(1, 0, 2))
-    assert_equal(occ2[0][0], SpinOrbital(1, 0, 0, 'alpha'))
+    assert_equal(occ2[0][0], AtomicSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
     assert_equal(len(occ2), 1)
 
     occ3 = list(occupy(2, 1, 2))
@@ -58,7 +68,8 @@ def test_calc_vals_and_term_symbol():
     assert_equal(calc_vals(occ1[1]), (0, Frac(-1, 2)))
     assert_equal(find_term_symbol(occ1[0]), TermSymbol(2, 0))
 
-    orbs1 = [SpinOrbital(3, 2, -2, 'alpha'), SpinOrbital(5, 4, -1, 'beta')]
+    orbs1 = [AtomicSpinOrbital(n=3, l=2, ml=-2, spin='alpha'),
+             AtomicSpinOrbital(n=5, l=4, ml=-1, spin='beta')]
     assert_equal(calc_vals(orbs1), (-3, 0))
     assert_equal(find_term_symbol(orbs1), TermSymbol(1, 3))
 
@@ -90,23 +101,23 @@ def test_terms_table_string():
     assert_equal(s2_terms.cleaned().string('latex-crossed'), s2_string)
 
 
-def test_mul():
-    two_s1_terms = subshell_terms(2, 0, 1)
-    three_s1_terms = subshell_terms(3, 0, 1)
-    print(two_s1_terms.string())
-    print(three_s1_terms.string())
-    print(two_s1_terms * three_s1_terms)
-    print(multiple_subshell_terms((2, 0, 1), (3, 0, 1)).cleaned())
-
-    two_p1_terms = subshell_terms(2, 1, 1).cleaned()
-    three_p1_terms = subshell_terms(3, 1, 1).cleaned()
-    print(two_p1_terms.string())
-    print(three_p1_terms.string())
-    mul = two_p1_terms * three_p1_terms
-    print(mul)
-    multi_subshell = multiple_subshell_terms((2, 1, 1), (3, 1, 1))
-    print(multi_subshell)
-    np_assert_equal(mul.table, multi_subshell.cleaned().table)
+#def test_mul():
+#    two_s1_terms = subshell_terms(2, 0, 1)
+#    three_s1_terms = subshell_terms(3, 0, 1)
+#    print(two_s1_terms.string())
+#    print(three_s1_terms.string())
+#    print(two_s1_terms * three_s1_terms)
+#    print(multiple_subshell_terms((2, 0, 1), (3, 0, 1)).cleaned())
+#
+#    two_p1_terms = subshell_terms(2, 1, 1).cleaned()
+#    three_p1_terms = subshell_terms(3, 1, 1).cleaned()
+#    print(two_p1_terms.string())
+#    print(three_p1_terms.string())
+#    mul = two_p1_terms * three_p1_terms
+#    print(mul)
+#    multi_subshell = multiple_subshell_terms((2, 1, 1), (3, 1, 1))
+#    print(multi_subshell)
+#    np_assert_equal(mul.table, multi_subshell.cleaned().table)
 
 
 def test_multiple_shubshell_terms():

@@ -2,29 +2,31 @@ from itertools import combinations, product
 from fractions import Fraction as Frac
 import numpy as np
 from copy import deepcopy
-
-AM_SYMBOLS = 'spdfghiklmnoqrtuvwxyz'
-AM_SYMBOLS_UP = 'SPDFGHIKLMNOQRTUVWXYZ'
+from abc import ABCMeta, abstractmethod
 
 
-class SpinOrbital:
+ATOMIC_AM_SYMBOLS = 'spdfghiklmnoqrtuvwxyz'
+ATOMIC_AM_SYMBOLS_UP = 'SPDFGHIKLMNOQRTUVWXYZ'
+DIATOMIC_AM_SYMBOLS = 'σπδφγηικμνo'
+DIATOMIC_AM_SYMBOLS_UP = 'ΣΠ∆ΦΓHIKMNO'
+
+
+class Orbital:
     def __init__(self, n, l, ml, spin):
-        """A spin orbital"""
+        """An orbital
+        :param n: shell
+        :param l: angular momentum
+        :param ml: directional angular momentum (azimuthal, etc.)
+        :param spin: electron spin
+        """
         if not isinstance(n, int) or n < 1:
             raise SyntaxError("Shells are integers starting at 1")
 
-        if isinstance(l, str):
-            try:
-                l = AM_SYMBOLS.index(l)
-            except ValueError:
-                raise SyntaxError("Invalid orbital")
-        elif not isinstance(l, int) or l < 0:
+        if not isinstance(l, int) or l < 0:
             raise SyntaxError("Orbitals are ints >=0 or the appropriate string")
-        if n - l < 1:
-            raise SyntaxError("Invalid subshell")
 
         if ml > l or not isinstance(ml, int):
-            raise SyntaxError("Azimuthal angular momentum (ml) is a positive " +
+            raise SyntaxError("Angular momentum (ml) is a positive " +
                               "integer such that -l <= ml <= l")
 
         if spin == 1 or spin == Frac(1/2) or spin == 'alpha':
@@ -40,18 +42,54 @@ class SpinOrbital:
 
     def __str__(self):
         spin = 'a' if self.spin > 0 else 'b'
-        orb = AM_SYMBOLS[self.l]
-        return '{n}{l}_{{{ml}}}{spin}'.format(n=self.n, l=orb, ml=self.ml,
-                                              spin=spin)
+        return '{n}{l}_{{{ml}}}{spin}'.format(n=self.n, l=self.orb_symbol,
+                                              ml=self.ml, spin=spin)
+
+    def __eq__(self, o):
+        if self.n == o.n and self.l == o.l \
+                and self.ml == o.l and self.spin == o.spin:
+            return True
+        return False
 
     def __repr__(self):
         return self.__str__()
 
-    def __eq__(self, o):
-        if self.n == o.n and self.l == o.l\
-                and self.ml == o.l and self.spin == o.spin:
-            return True
-        return False
+
+class AtomicSpinOrbital(Orbital):
+    """An atomic spin orbital"""
+    def __init__(self, n, l, ml, spin):
+        if isinstance(l, str):
+            if l in ATOMIC_AM_SYMBOLS:
+                l = ATOMIC_AM_SYMBOLS.index(l)
+            else:
+                raise SyntaxError("Invalid orbital")
+
+        # Atomic orbitals of higher angular momentum start at n = l + 1
+        if n - l < 1:
+            raise SyntaxError("Invalid subshell")
+
+        super().__init__(n, l, ml, spin)
+        self.orb_symbol = ATOMIC_AM_SYMBOLS[l]
+
+
+class MolecularSpinOrbital(Orbital):
+    """Due to the limitations of typing Greek characters on a latin keyboard,
+    The latin equivalents will be accepted and used for variable names.
+    Furthermore, due to code conventions encouraging lowercase for variable
+    names, the lowercase form will be used
+    """
+    def __init__(self, n, l, ml, spin):
+        if isinstance(l, str):
+            if l in DIATOMIC_AM_SYMBOLS:
+                l = DIATOMIC_AM_SYMBOLS.index(l)
+            elif l in ATOMIC_AM_SYMBOLS:
+                # Allow the latin equivalent
+                l = ATOMIC_AM_SYMBOLS.index(l)
+            else:
+                raise SyntaxError("Invalid orbital")
+
+        super().__init__(n, l, ml, spin)
+        self.orb_symbol = DIATOMIC_AM_SYMBOLS[l]
 
 
 def spin_iterator():
@@ -67,7 +105,7 @@ def spin_orbitals_iterator(shell, l):
     """
     for ml in range(l, -l-1, -1):
         for spin in [Frac(1, 2), Frac(-1, 2)]:
-            yield SpinOrbital(shell, l, ml, spin)
+            yield AtomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
 def occupy(shell, l, e_num):
@@ -105,7 +143,7 @@ class TermSymbol:
         self.mult = mult
 
     def __str__(self):
-        return '{}{}'.format(self.mult, AM_SYMBOLS_UP[abs(self.am)])
+        return '{}{}'.format(self.mult, ATOMIC_AM_SYMBOLS_UP[abs(self.am)])
 
     def __repr__(self):
         return str(self)
@@ -130,7 +168,7 @@ class TermSymbol:
         """
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity and angular momentum must be ints")
-        return "$^{}${}".format(mult, AM_SYMBOLS_UP[am])
+        return "$^{}${}".format(mult, ATOMIC_AM_SYMBOLS_UP[am])
 
 
 def find_term_symbol(orbs):
@@ -199,16 +237,12 @@ class TermTable:
                         o_am = l
                         t.add(mult + o_mult - 1, am + o_am, count * o_count)
 
-                        print(mult, am, o_mult, o_am)
                         if mult > 1 and o_mult > 1 and mult + o_mult > 3:
-                            print("HEY")
                             t.add(abs(mult - o_mult + 1), am + o_am, count * o_count)
                             print(abs(mult - o_mult + 1), am + o_am, count * o_count)
                         if am > 0 and o_am > 0:
-                            print("HEY1")
                             t.add(mult + o_mult - 1, abs(am - o_am), count * o_count)
                             if mult > 1 and o_mult > 1 and mult + o_mult > 3:
-                                print("HEY2")
                                 t.add(abs(mult - o_mult + 1), abs(am - o_am), count * o_count)
 
         return t
