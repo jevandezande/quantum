@@ -26,11 +26,12 @@ def test_atomic_spinorbital():
 def test_molecular_spinorbital():
     one_s1a = MolecularSpinOrbital(n=1, l=0, ml=0, spin=1)
     assert_equal(one_s1a.__repr__(), '1σ_{0}a')
-    five_g2b = MolecularSpinOrbital(n=1, l=4, ml=2, spin='beta')
-    assert_equal(five_g2b.__repr__(), '1γ_{2}b')
+    five_g2b = MolecularSpinOrbital(n=1, l=4, ml=-4, spin='beta')
+    assert_equal(five_g2b.__repr__(), '1γ_{-4}b')
     a = one_s1a
     assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 1, 2, 1)
     assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 1, 1, 'q')
+    assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 4, 2, 'q')
 
 
 def test_spin_iterator():
@@ -41,7 +42,7 @@ def test_spin_iterator():
 
 def test_atomic_spin_orbitals_iterator():
     p_orbs = ['2p_{1}a', '2p_{1}b', '2p_{0}a', '2p_{0}b', '2p_{-1}a', '2p_{-1}b']
-    p_l = list(map(str, spin_orbitals_iterator(2, 1)))
+    p_l = list(map(str, atomic_spinorbitals_iterator(2, 1)))
     assert_equal(p_l, p_orbs)
 
 
@@ -52,24 +53,54 @@ def test_molecular_spin_orbitals_iterator():
 
 
 def test_occupy():
-    assert_equal(list(occupy(1, 0, 0)), [()])
-    assert_equal(list(occupy(2, 1, 0)), [()])
-    assert_equal(list(occupy(2, 1, 0)), [()])
+    iterator1 = atomic_spinorbitals_iterator(1, 0)
+    assert_equal(list(occupy(iterator1, 0)), [()])
+    iterator2 = atomic_spinorbitals_iterator(2, 1)
+    assert_equal(list(occupy(iterator2, 0)), [()])
 
-    occ1 = list(occupy(1, 0, 1))
-    assert_equal(occ1[0][0], AtomicSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
-    assert_equal(len(occ1), 2)
+    iterator3 = atomic_spinorbitals_iterator(1, 0)
+    occ3 = list(occupy(iterator3, 1))
+    assert_equal(occ3[0][0], AtomicSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
+    assert_equal(len(occ3), 2)
 
-    occ2 = list(occupy(1, 0, 2))
-    assert_equal(occ2[0][0], AtomicSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
-    assert_equal(len(occ2), 1)
+    iterator4 = atomic_spinorbitals_iterator(1, 0)
+    occ4 = list(occupy(iterator4, 2))
+    assert_equal(occ4[0][0], AtomicSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
+    assert_equal(len(occ4), 1)
 
-    occ3 = list(occupy(2, 1, 2))
-    assert_equal(len(occ3), 15)
+    iterator5 = atomic_spinorbitals_iterator(2, 1)
+    occ5 = list(occupy(iterator5, 2))
+    assert_equal(len(occ5), 15)
+
+    iterator6 = molecular_spinorbitals_iterator(1, 0)
+    occ6 = list(occupy(iterator6, 1))
+    assert_equal(occ6[0][0], MolecularSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
+    assert_equal(occ6[1][0], MolecularSpinOrbital(n=1, l=0, ml=0, spin='beta'))
+    assert_equal(len(occ6), 2)
+
+    iterator7 = molecular_spinorbitals_iterator(1, 1)
+    occ7 = list(occupy(iterator7, 1))
+    assert_equal(occ7[0][0], MolecularSpinOrbital(n=1, l=1, ml=1, spin='alpha'))
+    assert_equal(occ7[1][0], MolecularSpinOrbital(n=1, l=1, ml=1, spin='beta'))
+    assert_equal(len(occ7), 4)
+
+    iterator7 = molecular_spinorbitals_iterator(1, 1)
+    occ7 = list(occupy(iterator7, 1))
+    assert_equal(occ7[0][0], MolecularSpinOrbital(n=1, l=1, ml=1, spin='alpha'))
+    assert_equal(occ7[3][0], MolecularSpinOrbital(n=1, l=1, ml=-1, spin='beta'))
+    assert_equal(len(occ7), 4)
+
+    iterator8 = molecular_spinorbitals_iterator(1, 3)
+    occ8 = list(occupy(iterator8, 2))
+    assert_equal(occ8[4],
+                 (MolecularSpinOrbital(n=1, l=3, ml=3, spin='beta'),
+                  MolecularSpinOrbital(n=1, l=3, ml=-3, spin='beta')))
+    assert_equal(len(occ8), 6)
 
 
 def test_calc_vals_and_term_symbol():
-    occ1 = list(occupy(1, 0, 1))
+    iterator = atomic_spinorbitals_iterator(1, 0)
+    occ1 = list(occupy(iterator, 1))
     assert_equal(calc_vals(occ1[0]), (0, Frac(1, 2)))
     assert_equal(calc_vals(occ1[1]), (0, Frac(-1, 2)))
     assert_equal(find_term_symbol(occ1[0]), TermSymbol(2, 0))
@@ -80,22 +111,22 @@ def test_calc_vals_and_term_symbol():
     assert_equal(find_term_symbol(orbs1), TermSymbol(1, 3))
 
 
-def test_terms_table():
+def test_atomic_terms_table():
     a = TermTable(2, 1)
     a.set(1, 1, 5)
     assert_equal(a.get(1, 1), 5)
-    p2_terms = subshell_terms(2, 1, 2)
+    p2_terms = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 2)
 
 
 def test_subshell_terms_and_clean():
     s2_table = TermTable(1, 0)
     s2_table.set(1, 0, 1)
-    s2_terms = subshell_terms(1, 0, 2)
+    s2_terms = subshell_terms(atomic_spinorbitals_iterator, 1, 0, 2)
     assert_equal(s2_terms, s2_table)
     np_assert_equal(s2_terms.cleaned().table, [[1]])
 
     p2_table = np.array([[3, 2, 1], [1, 1, 0]])
-    p2_terms = subshell_terms(2, 1, 2)
+    p2_terms = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 2)
     np_assert_equal(p2_terms.table, p2_table)
     np_assert_equal(p2_terms.cleaned().table, np.array([[1, 0, 1], [0, 1, 0]]))
 
@@ -103,7 +134,7 @@ def test_subshell_terms_and_clean():
 def test_terms_table_string():
     s2_string = '\\begin{tabular}{ r | c } \nM\\L &          0 \\hl \n  1 &  '\
                 + '\\O{$^1$S} \\\\ \n\\end{tabular}'
-    s2_terms = subshell_terms(3, 0, 2)
+    s2_terms = subshell_terms(atomic_spinorbitals_iterator, 3, 0, 2)
     assert_equal(s2_terms.cleaned().string('latex-crossed'), s2_string)
 
 
@@ -159,11 +190,11 @@ def test_multiple_shubshell_terms():
 #    np_assert_equal(mult_1s1_2p2_3d3.cleaned().table, c)
 
 
-def test_all_term_tables():
-    tables = all_term_tables(2)
-    one_s1 = subshell_terms(1, 0, 1)
+def test_all_atomic_term_tables():
+    tables = all_atomic_term_tables(2)
+    one_s1 = subshell_terms(atomic_spinorbitals_iterator, 1, 0, 1)
     assert_equal(next(tables), one_s1)
-    two_p1 = subshell_terms(2, 1, 1)
+    two_p1 = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 1)
     assert_equal(next(tables), two_p1)
-    two_p2 = subshell_terms(2, 1, 2)
+    two_p2 = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 2)
     assert_equal(next(tables), two_p2)

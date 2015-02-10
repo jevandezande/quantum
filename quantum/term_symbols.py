@@ -46,8 +46,9 @@ class Orbital:
                                               ml=self.ml, spin=spin)
 
     def __eq__(self, o):
-        if self.n == o.n and self.l == o.l \
-                and self.ml == o.l and self.spin == o.spin:
+        if type(self) == type(o) \
+                and self.n == o.n and self.l == o.l \
+                and self.ml == o.ml and self.spin == o.spin:
             return True
         return False
 
@@ -89,6 +90,8 @@ class MolecularSpinOrbital(Orbital):
                 raise SyntaxError("Invalid orbital")
 
         super().__init__(n, l, ml, spin)
+        if not abs(ml) == l:
+            raise SyntaxError("Molecular orbitals may only have ml = +- l")
         self.orb_symbol = DIATOMIC_AM_SYMBOLS[l]
 
 
@@ -98,13 +101,12 @@ def spin_iterator():
     yield -Frac(1, 2)
 
 
-def spin_orbitals_iterator(shell, l):
+def atomic_spinorbitals_iterator(shell, l):
     """Makes an iterator over all SpinOrbitals in the specified subshell
     :param shell: orbital shell
     :param l: angular momentum of the desired subshell
     """
-    for ml in range(l, -l-1, -1):
-        for spin in [Frac(1, 2), Frac(-1, 2)]:
+    for ml, spin in product(range(l, -l-1, -1), spin_iterator()):
             yield AtomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
@@ -113,18 +115,17 @@ def molecular_spinorbitals_iterator(shell, l):
     :param shell: orbital shell
     :param l: angular momentum of the desired subshell
     """
-    for ml in [l, -l]:
-        for spin in [Frac(1, 2), Frac(-1, 2)]:
+    mls = [l, -l] if l > 0 else [0]
+    for ml, spin in product(mls, spin_iterator()):
             yield MolecularSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
-def occupy(shell, l, e_num):
+def occupy(iterator, e_num):
     """Make an iterator of all possible combinations
-    :param shell: orbital shell
-    :param l: angular momentum of the desired subshell
+    :param iterator: an orbital iterator
     :param e_num: number of electrons
     """
-    return combinations(spin_orbitals_iterator(shell, l), e_num)
+    return combinations(iterator, e_num)
 
 
 def calc_vals(orbs):
@@ -249,7 +250,6 @@ class TermTable:
 
                         if mult > 1 and o_mult > 1 and mult + o_mult > 3:
                             t.add(abs(mult - o_mult + 1), am + o_am, count * o_count)
-                            print(abs(mult - o_mult + 1), am + o_am, count * o_count)
                         if am > 0 and o_am > 0:
                             t.add(mult + o_mult - 1, abs(am - o_am), count * o_count)
                             if mult > 1 and o_mult > 1 and mult + o_mult > 3:
@@ -348,8 +348,12 @@ class TermTable:
         return out
 
 
-def subshell_terms(shell, l, e_num):
+def subshell_terms(iter_func, shell, l, e_num):
     """Iterate over all possible combinations of electrons in orbitals
+    :param iter_func: orbital iterator function
+    :param shell: orbital shell
+    :param l: orbital angular momentum
+    :param e_num: number of electrons
     :returns: TermTable
     """
     max_am = l*e_num
@@ -358,7 +362,8 @@ def subshell_terms(shell, l, e_num):
     else:
         max_mult = 4*l + 3 - e_num
     t = TermTable(max_mult, max_am)
-    for comb in occupy(shell, l, e_num):
+    iterator = iter_func(shell, l)
+    for comb in occupy(iterator, e_num):
         am, spin = calc_vals(comb)
         if am < 0 or spin < 0:
             continue
@@ -369,6 +374,7 @@ def subshell_terms(shell, l, e_num):
 
 def multiple_subshell_terms(*subshells):
     """Iterate over all possible combinations of electrons in orbitals
+    Currently only for atomic orbitals
     :param subshells:  an iterable where each term is (shell, l, e_num)
     :returns: TermTable
     """
@@ -385,7 +391,8 @@ def multiple_subshell_terms(*subshells):
             max_mult += e_num + 1
         else:
             max_mult += 4*l + 3 - e_num
-        occupied.append(list(occupy(shell, l, e_num)))
+        iterator = atomic_spinorbitals_iterator(shell, l)
+        occupied.append(list(occupy(iterator, e_num)))
 
     t = TermTable(max_mult, max_am)
     for comb in product(*occupied):
@@ -403,14 +410,15 @@ def multiple_subshell_terms(*subshells):
     return t
 
 
-def all_term_tables(max_am):
+def all_atomic_term_tables(max_am):
     """Iterate through all the TermTables up to a specified angular momentum
 
     Since particle-hole equivalence makes the term symbol tables symmetric
     around the point where the number of electrons equals 2*am +1
     e.g. d^2 is equivalent to d^8
+    :param max_am: maximum desired angular momentum subshell
     """
 
     for am in range(max_am):
         for e_num in range(1, 2*am + 2):
-            yield subshell_terms(am + 1, am, e_num)
+            yield subshell_terms(atomic_spinorbitals_iterator, am+1, am, e_num)
