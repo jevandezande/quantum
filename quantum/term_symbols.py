@@ -181,7 +181,7 @@ class TermSymbol:
         return True
 
     @staticmethod
-    def latex(mult, am, orbital_type='atomic'):
+    def latex(mult, am, orbital_type):
         """Return a latex based representation of the term symbol
         :param mult: multiplicity of the term symbol
         :param am: angular momentum of the term symbol
@@ -281,6 +281,10 @@ class TermTable:
 
     __rmul__ = __mul__
 
+    @abstractmethod
+    def cleaned(self):
+        pass
+
     def get(self, mult, am):
         """Get the value at the specified mult and am"""
         return self.table[(mult - 1) // 2][am]
@@ -333,9 +337,8 @@ class TermTable:
                 mult = self.min_mult + i*2
                 out += '{:>3} '.format(mult)
                 for am in range(len(row)):
-                    symb = TermSymbol.latex(mult, am, self.orbital_type)
                     count = self.table[i, am]
-                    t = TermSymbol.latex(mult, am)
+                    t = TermSymbol.latex(mult, am, self.orbital_type)
                     if count == 0:
                         out += t_form.format('\\x{' + t + '}')
                     else:
@@ -368,8 +371,9 @@ class AtomicTermTable(TermTable):
         self.orbital_type = 'atomic'
 
     def cleaned(self):
-        """Create a new AtomicTermTable with all lower manifestations of terms removed
-        i.e. subtract the value of (a,b) from other terms where x<=a, y<=b
+        """Create a new AtomicTermTable with all lower manifestations of terms
+        removed.
+        i.e. subtract the value of x=mult, y=am from terms where x<mult, y<am
         :returns AtomicTermTable:
         """
         cleaned = deepcopy(self)
@@ -382,21 +386,51 @@ class AtomicTermTable(TermTable):
         return cleaned
 
 
-def subshell_terms(iter_func, shell, l, e_num):
+class DiatomicTermTable(TermTable):
+    """A diatomic version of TermTable"""
+    def __init__(self, max_mult, max_am):
+        super().__init__(max_mult, max_am)
+        self.orbital_type = 'diatomic'
+
+    def cleaned(self):
+        """Create a new DiatomicTermTable with all lower manifestations of terms
+        removed.
+        i.e. subtract the value of x=mult, y=am from terms where x<mult, y=am
+        :returns DiatomicTermTable:
+        """
+        cleaned = deepcopy(self)
+        for i in reversed(range(len(cleaned.table))):
+            for j in reversed(range(len(cleaned.table[0]))):
+                count = cleaned.table[i, j]
+                cleaned.table[:i+1, j] -= count
+                cleaned.table[i, j] = count
+
+        return cleaned
+
+
+def subshell_terms(orbital_type, shell, l, e_num):
     """Iterate over all possible combinations of electrons in orbitals
-    :param iter_func: orbital iterator function
+    :param orbital_type: type of orbitals desired
     :param shell: orbital shell
     :param l: orbital angular momentum
     :param e_num: number of electrons
-    :returns: AtomicTermTable
+    :returns: TermTable of corresponding to orbital_type
     """
     max_am = l*e_num
     if e_num <= 2*l + 1:
         max_mult = e_num + 1
     else:
         max_mult = 4*l + 3 - e_num
-    t = AtomicTermTable(max_mult, max_am)
-    iterator = iter_func(shell, l)
+
+    if orbital_type == 'atomic':
+        iterator = atomic_spinorbitals_iterator(shell, l)
+        t = AtomicTermTable(max_mult, max_am)
+    elif orbital_type == 'diatomic':
+        iterator = diatomic_spinorbitals_iterator(shell, l)
+        t = DiatomicTermTable(max_mult, max_am)
+    else:
+        raise SyntaxError("Invalid orbital type.")
+
     for comb in occupy(iterator, e_num):
         am, spin = calc_vals(comb)
         if am < 0 or spin < 0:
@@ -455,4 +489,4 @@ def all_atomic_term_tables(max_am):
 
     for am in range(max_am):
         for e_num in range(1, 2*am + 2):
-            yield subshell_terms(atomic_spinorbitals_iterator, am+1, am, e_num)
+            yield subshell_terms('atomic', am+1, am, e_num)

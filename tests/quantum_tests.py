@@ -23,7 +23,7 @@ def test_atomic_spinorbital():
     assert_raises(SyntaxError, AtomicSpinOrbital.__init__, a, 2, 1, 1, 'q')
 
 
-def test_molecular_spinorbital():
+def test_diatomic_spinorbital():
     one_s1a = DiatomicSpinOrbital(n=1, l=0, ml=0, spin=1)
     assert_equal(one_s1a.__repr__(), '1σ_{0}a')
     five_g2b = DiatomicSpinOrbital(n=1, l=4, ml=-4, spin='beta')
@@ -46,7 +46,7 @@ def test_atomic_spin_orbitals_iterator():
     assert_equal(p_l, p_orbs)
 
 
-def test_molecular_spin_orbitals_iterator():
+def test_diatomic_spin_orbitals_iterator():
     pi_orbs = ['2π_{1}a', '2π_{1}b', '2π_{-1}a', '2π_{-1}b']
     pi_l = list(map(str, diatomic_spinorbitals_iterator(2, 1)))
     assert_equal(pi_l, pi_orbs)
@@ -115,18 +115,27 @@ def test_atomic_terms_table():
     a = AtomicTermTable(2, 1)
     a.set(1, 1, 5)
     assert_equal(a.get(1, 1), 5)
-    p2_terms = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 2)
+    p2_terms = subshell_terms('atomic', 2, 1, 2)
+    np_assert_equal(p2_terms.cleaned().table, [[1, 0, 1], [0, 1, 0]])
+
+
+def test_diatomic_term_table():
+    d = DiatomicTermTable(2, 1)
+    d.set(1, 1, 5)
+    assert_equal(d.get(1, 1), 5)
+    pi2_terms = subshell_terms('diatomic', 1, 1, 2)
+    np_assert_equal(pi2_terms.cleaned().table, [[1, 0, 1], [1, 0, 0]])
 
 
 def test_subshell_terms_and_clean():
     s2_table = AtomicTermTable(1, 0)
     s2_table.set(1, 0, 1)
-    s2_terms = subshell_terms(atomic_spinorbitals_iterator, 1, 0, 2)
+    s2_terms = subshell_terms('atomic', 1, 0, 2)
     assert_equal(s2_terms, s2_table)
     np_assert_equal(s2_terms.cleaned().table, [[1]])
 
     p2_table = np.array([[3, 2, 1], [1, 1, 0]])
-    p2_terms = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 2)
+    p2_terms = subshell_terms('atomic', 2, 1, 2)
     np_assert_equal(p2_terms.table, p2_table)
     np_assert_equal(p2_terms.cleaned().table, np.array([[1, 0, 1], [0, 1, 0]]))
 
@@ -134,7 +143,7 @@ def test_subshell_terms_and_clean():
 def test_terms_table_string():
     s2_string = '\\begin{tabular}{ r | c } \nM\\L &          0 \\hl \n  1 &  '\
                 + '\\O{$^1$S} \\\\ \n\\end{tabular}'
-    s2_terms = subshell_terms(atomic_spinorbitals_iterator, 3, 0, 2)
+    s2_terms = subshell_terms('atomic', 3, 0, 2)
     assert_equal(s2_terms.cleaned().string('latex-crossed'), s2_string)
 
 
@@ -192,9 +201,9 @@ def test_multiple_shubshell_terms():
 
 def test_all_atomic_term_tables():
     tables = all_atomic_term_tables(2)
-    one_s1 = subshell_terms(atomic_spinorbitals_iterator, 1, 0, 1)
+    one_s1 = subshell_terms('atomic', 1, 0, 1)
     assert_equal(next(tables), one_s1)
-    two_p1 = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 1)
+    two_p1 = subshell_terms('atomic', 2, 1, 1)
     assert_equal(next(tables), two_p1)
-    two_p2 = subshell_terms(atomic_spinorbitals_iterator, 2, 1, 2)
+    two_p2 = subshell_terms('atomic', 2, 1, 2)
     assert_equal(next(tables), two_p2)
