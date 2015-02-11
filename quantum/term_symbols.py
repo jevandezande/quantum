@@ -450,29 +450,37 @@ def subshell_terms(orbital_type, shell, l, e_num):
     return t
 
 
-def multiple_subshell_terms(*subshells):
+def multiple_subshell_terms(orbital_type, *subshells):
     """Iterate over all possible combinations of electrons in orbitals
     Currently only for atomic orbitals
     :param subshells:  an iterable where each term is (shell, l, e_num)
-    :returns: AtomicTermTable
+    :returns: TermTable
     """
-
     if len(subshells) == 0:
-        return AtomicTermTable(0, 0)
+        raise SyntaxError("Need subshells")
+
+    if orbital_type not in ['atomic', 'diatomic']:
+        SyntaxError("Invalid orbital type.")
 
     occupied = []
     max_am = 0
-    max_mult = -len(subshells) + 1
+    max_mult = 1
     for shell, l, e_num in subshells:
-        max_am += l * e_num
-        if e_num <= 2 * l + 1:
-            max_mult += e_num + 1
-        else:
-            max_mult += 4 * l + 3 - e_num
-        iterator = atomic_spinorbitals_iterator(shell, l)
+        if orbital_type == 'atomic':
+            max_occ = 4 * l + 2
+            iterator = atomic_spinorbitals_iterator(shell, l)
+        elif orbital_type == 'diatomic':
+            max_occ = 4 if l > 0 else 2
+            iterator = diatomic_spinorbitals_iterator(shell, l)
+        max_mult += min(e_num, max_occ - e_num)
+        max_am += l * min(e_num, max_occ - e_num)
         occupied.append(list(occupy(iterator, e_num)))
 
-    t = AtomicTermTable(max_mult, max_am)
+    if orbital_type == 'atomic':
+        t = AtomicTermTable(max_mult, max_am)
+    elif orbital_type == 'diatomic':
+        t = DiatomicTermTable(max_mult, max_am)
+
     for comb in product(*occupied):
         am = 0
         spin = 0
@@ -483,6 +491,7 @@ def multiple_subshell_terms(*subshells):
 
         if am < 0 or spin < 0:
             continue
+
         t.increment(int(2 * spin + 1), am)
 
     return t

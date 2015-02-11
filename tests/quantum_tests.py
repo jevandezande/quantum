@@ -165,14 +165,15 @@ def test_terms_table_string():
 #    np_assert_equal(mul.table, multi_subshell.cleaned().table)
 
 
-def test_multiple_subshell_terms():
-    mult_1s2 = multiple_subshell_terms((1, 0, 2))
+def test_multiple_atomic_subshell_terms():
+    mult_1s2 = multiple_subshell_terms('atomic', (1, 0, 2))
     assert_equal(mult_1s2.max_mult, 1)
     assert_equal(mult_1s2.max_am, 0)
     np_assert_equal(mult_1s2.table, [[1]])
     np_assert_equal(mult_1s2.table, [[1]])
 
-    mult_1s1_2s1_3s2 = multiple_subshell_terms((1, 0, 1), (2, 0, 1), (3, 0, 2))
+    mult_1s1_2s1_3s2 = multiple_subshell_terms('atomic', (1, 0, 1), (2, 0, 1),
+                                               (3, 0, 2))
     assert_equal(mult_1s1_2s1_3s2.max_mult, 3)
     assert_equal(mult_1s1_2s1_3s2.max_am, 0)
     table = [[2], [1]]
@@ -180,6 +181,22 @@ def test_multiple_subshell_terms():
     cleaned = [[1], [1]]
     np_assert_equal(mult_1s1_2s1_3s2.cleaned().table, cleaned)
 
+
+def test_multiple_diatomic_subshell_terms():
+    mult_1s2 = multiple_subshell_terms('diatomic', (1, 0, 2))
+    assert_equal(mult_1s2.max_mult, 1)
+    assert_equal(mult_1s2.max_am, 0)
+    np_assert_equal(mult_1s2.table, [[1]])
+    np_assert_equal(mult_1s2.table, [[1]])
+
+    mult_1s1_1p2_3d3 = multiple_subshell_terms('diatomic', (1, 0, 1), (2, 1, 2),
+                                               (3, 2, 3))
+    assert_equal(mult_1s1_1p2_3d3.max_mult, 5)
+    assert_equal(mult_1s1_1p2_3d3.max_am, 4)
+    table = [[4, 0, 6, 0, 2], [2, 0, 4, 0, 1], [0, 0, 1, 0, 0]]
+    np_assert_equal(mult_1s1_1p2_3d3.table, table)
+    cleaned = [[2, 0, 2, 0, 1], [2, 0, 3, 0, 1], [0, 0, 1, 0, 0]]
+    np_assert_equal(mult_1s1_1p2_3d3.cleaned().table, cleaned)
 
 #def test_mult_long():
 #    mult_1s1_2p2_3d3 = multiple_subshell_terms((1, 0, 1), (2, 1, 2), (3, 2, 3))
