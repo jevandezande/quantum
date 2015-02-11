@@ -155,9 +155,9 @@ class TermSymbol:
         self.am = abs(am)
         self.mult = mult
         if orbital_type == 'atomic':
-            self.am_symbols = ATOMIC_AM_SYMBOLS
+            self.am_symbols = ATOMIC_AM_SYMBOLS_UP
         elif orbital_type == 'diatomic':
-            self.am_symbols = DIATOMIC_AM_SYMBOLS
+            self.am_symbols = DIATOMIC_AM_SYMBOLS_UP
         else:
             raise SyntaxError("Only atomic and molecular orbitals are currently"
                               "supported")
@@ -181,14 +181,34 @@ class TermSymbol:
         return True
 
     @staticmethod
-    def latex(mult, am):
+    def latex(mult, am, orbital_type='atomic'):
         """Return a latex based representation of the term symbol
         :param mult: multiplicity of the term symbol
         :param am: angular momentum of the term symbol
         """
+        if orbital_type == 'atomic':
+            am_symbols = ATOMIC_AM_SYMBOLS_UP
+        elif orbital_type == 'diatomic':
+            am_symbols = DIATOMIC_AM_SYMBOLS_UP
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity and angular momentum must be ints")
-        return "$^{}${}".format(mult, ATOMIC_AM_SYMBOLS_UP[am])
+        return "$^{}${}".format(mult, am_symbols[am])
+
+    @staticmethod
+    def table(min_mult, max_mult, min_am, max_am, orbital_type):
+        """
+        :param orbital_type: the type of orbitals that are used (i.e. atomic or
+                                                                 molecular)
+        """
+        height = int((max_mult-min_mult) / 2)
+        width = int(max_am-min_am)
+        print(width, height)
+        terms = [['']*width for _ in range(height)]
+        for i, am in enumerate(range(min_am, max_am)):
+            for j, mult in enumerate(range(min_mult, max_mult, 2)):
+                terms[j][i] = TermSymbol(mult, am, orbital_type)
+
+        return terms
 
 
 def find_term_symbol(orbs):
@@ -213,6 +233,7 @@ class TermTable:
         self.min_mult = (max_mult + 1) % 2 + 1
         self.height = (max_mult + 1) // 2
         self.table = np.zeros((self.height, self.width), dtype=np.dtype(int))
+        self.orbital_type = None
 
     def __str__(self):
         """Flips the table for printing in standard form"""
@@ -299,7 +320,7 @@ class TermTable:
             line = '{:>3} ' + '& {:>6} '*self.width + '\\\\ \n'
             for i, row in reversed(list(enumerate(self.table))):
                 mult = self.min_mult + i*2
-                symbols = [TermSymbol.latex(mult, am) for am in range(len(row))]
+                symbols = [TermSymbol.latex(mult, am, self.orbital_type) for am in range(len(row))]
                 out += line.format(mult, *symbols)
             out += '\\end{tabular}'
 
@@ -312,7 +333,7 @@ class TermTable:
                 mult = self.min_mult + i*2
                 out += '{:>3} '.format(mult)
                 for am in range(len(row)):
-                    symb = TermSymbol.latex(mult, am)
+                    symb = TermSymbol.latex(mult, am, self.orbital_type)
                     count = self.table[i, am]
                     t = TermSymbol.latex(mult, am)
                     if count == 0:
@@ -342,6 +363,9 @@ class AtomicTermTable(TermTable):
     Can remove all manifestations of terms at lower multiplicity or angular
     momentum. Thus producing the standard scorecard.
     """
+    def __init__(self, max_mult, max_am):
+        super().__init__(max_mult, max_am)
+        self.orbital_type = 'atomic'
 
     def cleaned(self):
         """Create a new AtomicTermTable with all lower manifestations of terms removed
