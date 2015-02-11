@@ -73,7 +73,7 @@ class AtomicSpinOrbital(Orbital):
         self.orb_symbol = ATOMIC_AM_SYMBOLS[l]
 
 
-class MolecularSpinOrbital(Orbital):
+class DiatomicSpinOrbital(Orbital):
     """Due to the limitations of typing Greek characters on a latin keyboard,
     The latin equivalents will be accepted and used for variable names.
     Furthermore, due to code conventions encouraging lowercase for variable
@@ -91,7 +91,7 @@ class MolecularSpinOrbital(Orbital):
 
         super().__init__(n, l, ml, spin)
         if not abs(ml) == l:
-            raise SyntaxError("Molecular orbitals may only have ml = +- l")
+            raise SyntaxError("Diatomic orbitals may only have ml = +- l")
         self.orb_symbol = DIATOMIC_AM_SYMBOLS[l]
 
 
@@ -110,14 +110,14 @@ def atomic_spinorbitals_iterator(shell, l):
             yield AtomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
-def molecular_spinorbitals_iterator(shell, l):
-    """Makes an iterator over all MolecularSpinOrbitals in specified subshell
+def diatomic_spinorbitals_iterator(shell, l):
+    """Makes an iterator over all DiatomicSpinOrbitals in specified subshell
     :param shell: orbital shell
     :param l: angular momentum of the desired subshell
     """
     mls = [l, -l] if l > 0 else [0]
     for ml, spin in product(mls, spin_iterator()):
-            yield MolecularSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
+            yield DiatomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
 def occupy(iterator, e_num):
@@ -148,7 +148,7 @@ class TermSymbol:
         :param mult: multiplicity of the term symbol
         :param am: angular momentum of the term symbol
         :param orbital_type: the type of orbitals that are used (i.e. atomic or
-            molecular)
+            diatomic)
         """
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity and angular momentum must be ints")
@@ -159,7 +159,7 @@ class TermSymbol:
         elif orbital_type == 'diatomic':
             self.am_symbols = DIATOMIC_AM_SYMBOLS_UP
         else:
-            raise SyntaxError("Only atomic and molecular orbitals are currently"
+            raise SyntaxError("Only atomic and diatomic orbitals are currently"
                               "supported")
 
     def __str__(self):
@@ -198,7 +198,7 @@ class TermSymbol:
     def table(min_mult, max_mult, min_am, max_am, orbital_type):
         """
         :param orbital_type: the type of orbitals that are used (i.e. atomic or
-                                                                 molecular)
+                                                                 diatomic)
         """
         height = int((max_mult-min_mult) / 2)
         width = int(max_am-min_am)

@@ -24,14 +24,14 @@ def test_atomic_spinorbital():
 
 
 def test_molecular_spinorbital():
-    one_s1a = MolecularSpinOrbital(n=1, l=0, ml=0, spin=1)
+    one_s1a = DiatomicSpinOrbital(n=1, l=0, ml=0, spin=1)
     assert_equal(one_s1a.__repr__(), '1σ_{0}a')
-    five_g2b = MolecularSpinOrbital(n=1, l=4, ml=-4, spin='beta')
+    five_g2b = DiatomicSpinOrbital(n=1, l=4, ml=-4, spin='beta')
     assert_equal(five_g2b.__repr__(), '1γ_{-4}b')
     a = one_s1a
-    assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 1, 2, 1)
-    assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 1, 1, 'q')
-    assert_raises(SyntaxError, MolecularSpinOrbital.__init__, a, 2, 4, 2, 'q')
+    assert_raises(SyntaxError, DiatomicSpinOrbital.__init__, a, 2, 1, 2, 1)
+    assert_raises(SyntaxError, DiatomicSpinOrbital.__init__, a, 2, 1, 1, 'q')
+    assert_raises(SyntaxError, DiatomicSpinOrbital.__init__, a, 2, 4, 2, 'q')
 
 
 def test_spin_iterator():
@@ -48,7 +48,7 @@ def test_atomic_spin_orbitals_iterator():
 
 def test_molecular_spin_orbitals_iterator():
     pi_orbs = ['2π_{1}a', '2π_{1}b', '2π_{-1}a', '2π_{-1}b']
-    pi_l = list(map(str, molecular_spinorbitals_iterator(2, 1)))
+    pi_l = list(map(str, diatomic_spinorbitals_iterator(2, 1)))
     assert_equal(pi_l, pi_orbs)
 
 
@@ -72,29 +72,29 @@ def test_occupy():
     occ5 = list(occupy(iterator5, 2))
     assert_equal(len(occ5), 15)
 
-    iterator6 = molecular_spinorbitals_iterator(1, 0)
+    iterator6 = diatomic_spinorbitals_iterator(1, 0)
     occ6 = list(occupy(iterator6, 1))
-    assert_equal(occ6[0][0], MolecularSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
-    assert_equal(occ6[1][0], MolecularSpinOrbital(n=1, l=0, ml=0, spin='beta'))
+    assert_equal(occ6[0][0], DiatomicSpinOrbital(n=1, l=0, ml=0, spin='alpha'))
+    assert_equal(occ6[1][0], DiatomicSpinOrbital(n=1, l=0, ml=0, spin='beta'))
     assert_equal(len(occ6), 2)
 
-    iterator7 = molecular_spinorbitals_iterator(1, 1)
+    iterator7 = diatomic_spinorbitals_iterator(1, 1)
     occ7 = list(occupy(iterator7, 1))
-    assert_equal(occ7[0][0], MolecularSpinOrbital(n=1, l=1, ml=1, spin='alpha'))
-    assert_equal(occ7[1][0], MolecularSpinOrbital(n=1, l=1, ml=1, spin='beta'))
+    assert_equal(occ7[0][0], DiatomicSpinOrbital(n=1, l=1, ml=1, spin='alpha'))
+    assert_equal(occ7[1][0], DiatomicSpinOrbital(n=1, l=1, ml=1, spin='beta'))
     assert_equal(len(occ7), 4)
 
-    iterator7 = molecular_spinorbitals_iterator(1, 1)
+    iterator7 = diatomic_spinorbitals_iterator(1, 1)
     occ7 = list(occupy(iterator7, 1))
-    assert_equal(occ7[0][0], MolecularSpinOrbital(n=1, l=1, ml=1, spin='alpha'))
-    assert_equal(occ7[3][0], MolecularSpinOrbital(n=1, l=1, ml=-1, spin='beta'))
+    assert_equal(occ7[0][0], DiatomicSpinOrbital(n=1, l=1, ml=1, spin='alpha'))
+    assert_equal(occ7[3][0], DiatomicSpinOrbital(n=1, l=1, ml=-1, spin='beta'))
     assert_equal(len(occ7), 4)
 
-    iterator8 = molecular_spinorbitals_iterator(1, 3)
+    iterator8 = diatomic_spinorbitals_iterator(1, 3)
     occ8 = list(occupy(iterator8, 2))
     assert_equal(occ8[4],
-                 (MolecularSpinOrbital(n=1, l=3, ml=3, spin='beta'),
-                  MolecularSpinOrbital(n=1, l=3, ml=-3, spin='beta')))
+                 (DiatomicSpinOrbital(n=1, l=3, ml=3, spin='beta'),
+                  DiatomicSpinOrbital(n=1, l=3, ml=-3, spin='beta')))
     assert_equal(len(occ8), 6)
 
 
