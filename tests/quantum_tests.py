@@ -1,7 +1,9 @@
-from nose.tools import *
-from quantum.term_symbols import *
 from fractions import Fraction
+
+from nose.tools import *
 from numpy.testing import assert_equal as np_assert_equal
+
+from quantum.term_symbols import *
 
 
 def setup():
@@ -41,7 +43,8 @@ def test_spin_iterator():
 
 
 def test_atomic_spin_orbitals_iterator():
-    p_orbs = ['2p_{1}a', '2p_{1}b', '2p_{0}a', '2p_{0}b', '2p_{-1}a', '2p_{-1}b']
+    p_orbs = ['2p_{1}a', '2p_{1}b', '2p_{0}a', '2p_{0}b', '2p_{-1}a',
+              '2p_{-1}b']
     p_l = list(map(str, atomic_spinorbitals_iterator(2, 1)))
     assert_equal(p_l, p_orbs)
 
@@ -115,7 +118,16 @@ def test_atomic_terms_table():
     a = AtomicTermTable(2, 1)
     a.set(1, 1, 5)
     assert_equal(a.get(1, 1), 5)
+
+    s2_table = AtomicTermTable(1, 0)
+    s2_table.set(1, 0, 1)
+    s2_terms = subshell_terms('atomic', 1, 0, 2)
+    assert_equal(s2_terms, s2_table)
+    np_assert_equal(s2_terms.cleaned().table, [[1]])
+
     p2_terms = subshell_terms('atomic', 2, 1, 2)
+    p2_table = np.array([[3, 2, 1], [1, 1, 0]])
+    np_assert_equal(p2_terms.table, p2_table)
     np_assert_equal(p2_terms.cleaned().table, [[1, 0, 1], [0, 1, 0]])
 
 
@@ -127,27 +139,14 @@ def test_diatomic_term_table():
     np_assert_equal(pi2_terms.cleaned().table, [[1, 0, 1], [1, 0, 0]])
 
 
-def test_subshell_terms_and_clean():
-    s2_table = AtomicTermTable(1, 0)
-    s2_table.set(1, 0, 1)
-    s2_terms = subshell_terms('atomic', 1, 0, 2)
-    assert_equal(s2_terms, s2_table)
-    np_assert_equal(s2_terms.cleaned().table, [[1]])
-
-    p2_table = np.array([[3, 2, 1], [1, 1, 0]])
-    p2_terms = subshell_terms('atomic', 2, 1, 2)
-    np_assert_equal(p2_terms.table, p2_table)
-    np_assert_equal(p2_terms.cleaned().table, np.array([[1, 0, 1], [0, 1, 0]]))
-
-
 def test_terms_table_string():
-    s2_string = '\\begin{tabular}{ r | c } \nM\\L &          0 \\hl \n  1 &  '\
+    s2_string = '\\begin{tabular}{ r | c } \nM\\L &          0 \\hl \n  1 &  ' \
                 + '\\O{$^1$S} \\\\ \n\\end{tabular}'
     s2_terms = subshell_terms('atomic', 3, 0, 2)
     assert_equal(s2_terms.cleaned().string('latex-crossed'), s2_string)
 
 
-#def test_mul():
+# def test_mul():
 #    two_s1_terms = subshell_terms(2, 0, 1)
 #    three_s1_terms = subshell_terms(3, 0, 1)
 #    print(two_s1_terms.string())
@@ -166,7 +165,7 @@ def test_terms_table_string():
 #    np_assert_equal(mul.table, multi_subshell.cleaned().table)
 
 
-def test_multiple_shubshell_terms():
+def test_multiple_subshell_terms():
     mult_1s2 = multiple_subshell_terms((1, 0, 2))
     assert_equal(mult_1s2.max_mult, 1)
     assert_equal(mult_1s2.max_am, 0)

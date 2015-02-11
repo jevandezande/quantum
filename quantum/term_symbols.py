@@ -1,8 +1,9 @@
 from itertools import combinations, product
 from fractions import Fraction as Frac
-import numpy as np
 from copy import deepcopy
 from abc import ABCMeta, abstractmethod
+
+import numpy as np
 
 
 ATOMIC_AM_SYMBOLS = 'spdfghiklmnoqrtuvwxyz'
@@ -29,10 +30,10 @@ class Orbital:
             raise SyntaxError("Angular momentum (ml) is a positive " +
                               "integer such that -l <= ml <= l")
 
-        if spin == 1 or spin == Frac(1/2) or spin == 'alpha':
-            self.spin = Frac(1/2)
-        elif spin == -1 or spin == Frac(-1/2) or spin == 'beta':
-            self.spin = Frac(-1/2)
+        if spin == 1 or spin == Frac(1 / 2) or spin == 'alpha':
+            self.spin = Frac(1 / 2)
+        elif spin == -1 or spin == Frac(-1 / 2) or spin == 'beta':
+            self.spin = Frac(-1 / 2)
         else:
             raise SyntaxError("Invalid spin")
 
@@ -58,6 +59,7 @@ class Orbital:
 
 class AtomicSpinOrbital(Orbital):
     """An atomic spin orbital"""
+
     def __init__(self, n, l, ml, spin):
         if isinstance(l, str):
             if l in ATOMIC_AM_SYMBOLS:
@@ -79,6 +81,7 @@ class DiatomicSpinOrbital(Orbital):
     Furthermore, due to code conventions encouraging lowercase for variable
     names, the lowercase form will be used
     """
+
     def __init__(self, n, l, ml, spin):
         if isinstance(l, str):
             if l in DIATOMIC_AM_SYMBOLS:
@@ -106,8 +109,8 @@ def atomic_spinorbitals_iterator(shell, l):
     :param shell: orbital shell
     :param l: angular momentum of the desired subshell
     """
-    for ml, spin in product(range(l, -l-1, -1), spin_iterator()):
-            yield AtomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
+    for ml, spin in product(range(l, -l - 1, -1), spin_iterator()):
+        yield AtomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
 def diatomic_spinorbitals_iterator(shell, l):
@@ -117,7 +120,7 @@ def diatomic_spinorbitals_iterator(shell, l):
     """
     mls = [l, -l] if l > 0 else [0]
     for ml, spin in product(mls, spin_iterator()):
-            yield DiatomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
+        yield DiatomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
 def occupy(iterator, e_num):
@@ -143,6 +146,7 @@ def calc_vals(orbs):
 
 class TermSymbol:
     """Quantum term symbol class for atoms"""
+
     def __init__(self, mult, am, orbital_type='atomic'):
         """
         :param mult: multiplicity of the term symbol
@@ -200,10 +204,10 @@ class TermSymbol:
         :param orbital_type: the type of orbitals that are used (i.e. atomic or
                                                                  diatomic)
         """
-        height = int((max_mult-min_mult) / 2)
-        width = int(max_am-min_am)
+        height = int((max_mult - min_mult) / 2)
+        width = int(max_am - min_am)
         print(width, height)
-        terms = [['']*width for _ in range(height)]
+        terms = [[''] * width for _ in range(height)]
         for i, am in enumerate(range(min_am, max_am)):
             for j, mult in enumerate(range(min_mult, max_mult, 2)):
                 terms[j][i] = TermSymbol(mult, am, orbital_type)
@@ -217,7 +221,7 @@ def find_term_symbol(orbs):
     WARNING: It does not check if the set of orbitals is valid
     """
     am, spin = calc_vals(orbs)
-    return TermSymbol(int(2*spin + 1), am)
+    return TermSymbol(int(2 * spin + 1), am)
 
 
 class TermTable:
@@ -262,20 +266,23 @@ class TermTable:
 
         for i, row in enumerate(self.table):
             for j, count in enumerate(row):
-                mult = self.min_mult + 2*i
+                mult = self.min_mult + 2 * i
                 am = j
                 for k, o_row in enumerate(o.table):
                     for l, o_count in enumerate(o_row):
-                        o_mult = o.min_mult + 2*i
+                        o_mult = o.min_mult + 2 * i
                         o_am = l
                         t.add(mult + o_mult - 1, am + o_am, count * o_count)
 
                         if mult > 1 and o_mult > 1 and mult + o_mult > 3:
-                            t.add(abs(mult - o_mult + 1), am + o_am, count * o_count)
+                            t.add(abs(mult - o_mult + 1), am + o_am,
+                                  count * o_count)
                         if am > 0 and o_am > 0:
-                            t.add(mult + o_mult - 1, abs(am - o_am), count * o_count)
+                            t.add(mult + o_mult - 1, abs(am - o_am),
+                                  count * o_count)
                             if mult > 1 and o_mult > 1 and mult + o_mult > 3:
-                                t.add(abs(mult - o_mult + 1), abs(am - o_am), count * o_count)
+                                t.add(abs(mult - o_mult + 1), abs(am - o_am),
+                                      count * o_count)
 
         return t
 
@@ -308,33 +315,34 @@ class TermTable:
         """
         out = ''
         if style == 'table':
-            top_line = 'M\\L|' + ' {:> 3}'*self.width + '\n'
+            top_line = 'M\\L|' + ' {:> 3}' * self.width + '\n'
             out += top_line.format(*list(range(self.width)))
-            out += '-'*(4 + 4*self.width) + '\n'
-            line = '{:> 3}|' + ' {:> 3}'*self.width + '\n'
+            out += '-' * (4 + 4 * self.width) + '\n'
+            line = '{:> 3}|' + ' {:> 3}' * self.width + '\n'
             for i, row in reversed(list(enumerate(self.table))):
-                mult = self.min_mult + i*2
+                mult = self.min_mult + i * 2
                 out += line.format(mult, *row)
-                out += '-'*(4 + 4*self.width) + '\n'
+                out += '-' * (4 + 4 * self.width) + '\n'
 
         elif style == 'latex':
-            out += '\\begin{tabular}{ r |' + ' c'*self.width + ' } \n'
-            top_line = 'M\\L ' + '& {:> 6} '*self.width + '\\hl \n'
+            out += '\\begin{tabular}{ r |' + ' c' * self.width + ' } \n'
+            top_line = 'M\\L ' + '& {:> 6} ' * self.width + '\\hl \n'
             out += top_line.format(*list(range(self.width)))
-            line = '{:>3} ' + '& {:>6} '*self.width + '\\\\ \n'
+            line = '{:>3} ' + '& {:>6} ' * self.width + '\\\\ \n'
             for i, row in reversed(list(enumerate(self.table))):
-                mult = self.min_mult + i*2
-                symbols = [TermSymbol.latex(mult, am, self.orbital_type) for am in range(len(row))]
+                mult = self.min_mult + i * 2
+                symbols = [TermSymbol.latex(mult, am, self.orbital_type) for am
+                           in range(len(row))]
                 out += line.format(mult, *symbols)
             out += '\\end{tabular}'
 
         elif style == 'latex-crossed':
-            out += '\\begin{tabular}{ r |' + ' c'*self.width + ' } \n'
-            top_line = 'M\\L ' + '& {:> 10} '*self.width + '\\hl \n'
+            out += '\\begin{tabular}{ r |' + ' c' * self.width + ' } \n'
+            top_line = 'M\\L ' + '& {:> 10} ' * self.width + '\\hl \n'
             out += top_line.format(*list(range(self.width)))
             t_form = '& {:>10} '
             for i, row in reversed(list(enumerate(self.table))):
-                mult = self.min_mult + i*2
+                mult = self.min_mult + i * 2
                 out += '{:>3} '.format(mult)
                 for am in range(len(row)):
                     count = self.table[i, am]
@@ -342,17 +350,17 @@ class TermTable:
                     if count == 0:
                         out += t_form.format('\\x{' + t + '}')
                     else:
-                        out += t_form.format('\\' + 'O'*count + '{' + t + '}')
+                        out += t_form.format('\\' + 'O' * count + '{' + t + '}')
                 out += '\\\\ \n'
             out += '\\end{tabular}'
 
         elif style == 'latex-table':
-            out += '\\begin{tabular}{ r |' + ' c'*self.width + ' } \n'
-            top_line = 'M\\L ' + '& {:>3} '*self.width + '\\hl \n'
+            out += '\\begin{tabular}{ r |' + ' c' * self.width + ' } \n'
+            top_line = 'M\\L ' + '& {:>3} ' * self.width + '\\hl \n'
             out += top_line.format(*list(range(self.width)))
-            line = '{:>3} ' + '& {:>3} '*self.width + '\\\\ \n'
+            line = '{:>3} ' + '& {:>3} ' * self.width + '\\\\ \n'
             for i, row in reversed(list(enumerate(self.table))):
-                mult = self.min_mult + i*2
+                mult = self.min_mult + i * 2
                 out += line.format(mult, *row)
             out += '\\end{tabular}'
 
@@ -366,6 +374,7 @@ class AtomicTermTable(TermTable):
     Can remove all manifestations of terms at lower multiplicity or angular
     momentum. Thus producing the standard scorecard.
     """
+
     def __init__(self, max_mult, max_am):
         super().__init__(max_mult, max_am)
         self.orbital_type = 'atomic'
@@ -380,7 +389,7 @@ class AtomicTermTable(TermTable):
         for i in reversed(range(len(cleaned.table))):
             for j in reversed(range(len(cleaned.table[0]))):
                 count = cleaned.table[i, j]
-                cleaned.table[:i+1, :j+1] -= count
+                cleaned.table[:i + 1, :j + 1] -= count
                 cleaned.table[i, j] = count
 
         return cleaned
@@ -388,6 +397,7 @@ class AtomicTermTable(TermTable):
 
 class DiatomicTermTable(TermTable):
     """A diatomic version of TermTable"""
+
     def __init__(self, max_mult, max_am):
         super().__init__(max_mult, max_am)
         self.orbital_type = 'diatomic'
@@ -402,7 +412,7 @@ class DiatomicTermTable(TermTable):
         for i in reversed(range(len(cleaned.table))):
             for j in reversed(range(len(cleaned.table[0]))):
                 count = cleaned.table[i, j]
-                cleaned.table[:i+1, j] -= count
+                cleaned.table[:i + 1, j] -= count
                 cleaned.table[i, j] = count
 
         return cleaned
@@ -416,11 +426,11 @@ def subshell_terms(orbital_type, shell, l, e_num):
     :param e_num: number of electrons
     :returns: TermTable of corresponding to orbital_type
     """
-    max_am = l*e_num
-    if e_num <= 2*l + 1:
+    max_am = l * e_num
+    if e_num <= 2 * l + 1:
         max_mult = e_num + 1
     else:
-        max_mult = 4*l + 3 - e_num
+        max_mult = 4 * l + 3 - e_num
 
     if orbital_type == 'atomic':
         iterator = atomic_spinorbitals_iterator(shell, l)
@@ -435,7 +445,7 @@ def subshell_terms(orbital_type, shell, l, e_num):
         am, spin = calc_vals(comb)
         if am < 0 or spin < 0:
             continue
-        t.increment(int(2*spin + 1), am)
+        t.increment(int(2 * spin + 1), am)
 
     return t
 
@@ -455,10 +465,10 @@ def multiple_subshell_terms(*subshells):
     max_mult = -len(subshells) + 1
     for shell, l, e_num in subshells:
         max_am += l * e_num
-        if e_num <= 2*l + 1:
+        if e_num <= 2 * l + 1:
             max_mult += e_num + 1
         else:
-            max_mult += 4*l + 3 - e_num
+            max_mult += 4 * l + 3 - e_num
         iterator = atomic_spinorbitals_iterator(shell, l)
         occupied.append(list(occupy(iterator, e_num)))
 
@@ -473,7 +483,7 @@ def multiple_subshell_terms(*subshells):
 
         if am < 0 or spin < 0:
             continue
-        t.increment(int(2*spin + 1), am)
+        t.increment(int(2 * spin + 1), am)
 
     return t
 
@@ -488,5 +498,5 @@ def all_atomic_term_tables(max_am):
     """
 
     for am in range(max_am):
-        for e_num in range(1, 2*am + 2):
-            yield subshell_terms('atomic', am+1, am, e_num)
+        for e_num in range(1, 2 * am + 2):
+            yield subshell_terms('atomic', am + 1, am, e_num)
