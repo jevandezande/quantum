@@ -51,6 +51,9 @@ class Orbital:
     def __repr__(self):
         return self.__str__()
 
+    def spatial_str(self):
+        return '{n}{l}_{{{ml}}}'.format(n=self.n, l=self.orb_symbol, ml=self.ml)
+
 
 class AtomicSpinOrbital(Orbital):
     """An atomic spin orbital"""
