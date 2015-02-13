@@ -38,8 +38,10 @@ class Orbital:
 
     def __str__(self):
         spin = 'a' if self.spin > 0 else 'b'
-        return '{n}{l}_{{{ml}}}{spin}'.format(n=self.n, l=self.orb_symbol,
-                                              ml=self.ml, spin=spin)
+        form = '{n}{l}_{{{ml}}}{spin}'
+        if self.l == 0:
+            form = '{n}{l}{spin}'
+        return form.format(n=self.n, l=self.orb_symbol, ml=self.ml, spin=spin)
 
     def __eq__(self, o):
         if type(self) == type(o) \
@@ -52,7 +54,10 @@ class Orbital:
         return self.__str__()
 
     def spatial_str(self):
-        return '{n}{l}_{{{ml}}}'.format(n=self.n, l=self.orb_symbol, ml=self.ml)
+        form = '{n}{l}_{{{ml}}}'
+        if self.l == 0:
+            form = '{n}{l}'
+        return form.format(n=self.n, l=self.orb_symbol, ml=self.ml)
 
 
 class AtomicSpinOrbital(Orbital):

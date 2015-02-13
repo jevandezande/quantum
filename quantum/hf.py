@@ -65,6 +65,8 @@ class TwoElectron:
             for j, orb_j in enumerate(self.wfn.orbs()[i + 1:], start=i+1):
                 self.terms.append((orb_i, orb_j))
 
+        self.spin_int = ''
+
     @abstractmethod
     def __str__(self):
         pass
@@ -79,6 +81,8 @@ class TwoElectron:
                 spin_int.append("{}({},{})".format(name,
                                                    i.spatial_str(),
                                                    j.spatial_str()))
+
+        self.spin_int = spin_int
 
         return " + ".join(spin_int)
 
@@ -99,10 +103,10 @@ class K(TwoElectron):
     Exchange energy terms
     """
     def __str__(self):
-        return " + ".join(["K({},{})".format(i, j) for i, j in self.terms])
+        return " ".join(["-K({},{})".format(i, j) for i, j in self.terms])
 
     def spin_integrate(self):
-        return super().spin_integrate(True, 'K')
+        return super().spin_integrate(True, '-K')
 
 
 class HF:
@@ -116,10 +120,12 @@ class HF:
         self.wfn = wavefunction
 
     def __str__(self):
+        return "{}\n+ {}\n+ {}".format(I(self.wfn), J(self.wfn), K(self.wfn))
+
+    def spin_integrate(self):
         i = I(self.wfn)
         j = J(self.wfn)
         k = K(self.wfn)
-        return "{}\n+ {}\n+ {}".format(i, j, k)
-
-    def spin_integrated(self):
-        pass
+        return "{}\n+ {}\n {}".format(i.spin_integrate(),
+                                      j.spin_integrate(),
+                                      k.spin_integrate())
