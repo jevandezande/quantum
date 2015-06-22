@@ -4,7 +4,7 @@ from fractions import Fraction as Frac
 ATOMIC_AM_SYMBOLS = 'spdfghiklmnoqrtuvwxyz'
 ATOMIC_AM_SYMBOLS_UP = 'SPDFGHIKLMNOQRTUVWXYZ'
 DIATOMIC_AM_SYMBOLS = 'σπδφγηικμνo'
-DIATOMIC_AM_SYMBOLS_UP = 'ΣΠ∆ΦΓHIKMNO'
+DIATOMIC_AM_SYMBOLS_UP = 'ΣΠ∆ΦΓHIKMNOQRTUVWXYZ'
 
 
 class Orbital:
