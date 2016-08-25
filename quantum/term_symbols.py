@@ -64,7 +64,8 @@ class TermSymbol:
             diatomic)
         """
         if not TermSymbol.check(mult, am):
-            raise SyntaxError("Multiplicity and angular momentum must be ints")
+            raise SyntaxError("Multiplicity must be greater than 0 and"
+                              "multiplicity and angular momentum must be ints")
         self.am = abs(am)
         self.mult = mult
         if orbital_type == 'atomic':
@@ -89,7 +90,9 @@ class TermSymbol:
     @staticmethod
     def check(mult, am):
         """Check if the multiplicity and angular momentum are valid"""
-        if not isinstance(mult, int) or mult < 1 or not isinstance(am, int):
+        if mult < 1 or not isinstance(am, int):
+            return False
+        if not isinstance(mult, int) and not (isinstance(mult, Frac) and mult.denominator == 1):
             return False
         return True
 
@@ -115,7 +118,6 @@ class TermSymbol:
         """
         height = int((max_mult - min_mult) / 2)
         width = int(max_am - min_am)
-        print(width, height)
         terms = [[''] * width for _ in range(height)]
         for i, am in enumerate(range(min_am, max_am)):
             for j, mult in enumerate(range(min_mult, max_mult, 2)):
@@ -124,13 +126,44 @@ class TermSymbol:
         return terms
 
 
-def find_term_symbol(orbs):
+class SOTermSymbol(TermSymbol):
+    
+    def __init__(self, mult, am, j, orbital_type='atomic'):
+        """
+        :param mult: multiplicity of the term symbol
+        :param am: angular momentum of the term symbol
+        :param j: total angular momentum quantum number, |l + s|
+        :param orbital_type: the type of orbitals that are used (i.e. atomic or
+            diatomic)
+        """
+        super().__init__(mult, am, orbital_type)
+        if not isinstance(j, (int, Frac)):
+            raise SyntaxError("Invalid j")
+        self.j = j
+
+    def __str__(self):
+        return '{}{}_{}'.format(self.mult, self.am_symbols[abs(self.am)], self.j)
+
+    def __eq__(self, o):
+        if not isinstance(o, SOTermSymbol):
+            raise SyntaxError("Cannot compare SOTermSymbol and {}".format(type(o)))
+        if self.am == o.am and self.mult == o.mult and self.j == o.j:
+            return True
+        return False
+
+
+
+def find_term_symbol(orbs, j=False):
     """Generate the term symbol for the given set of orbitals
     :param orbs: an iterable containing SpinOrbitals
     WARNING: It does not check if the set of orbitals is valid
     """
     am, spin = calc_vals(orbs)
-    return TermSymbol(int(2 * spin + 1), am)
+    if not j:
+        return TermSymbol(int(2 * spin + 1), am)
+    else:
+        """TODO: Confirm this is the best way to generate J"""
+        return SOTermSymbol(int(2 * abs(spin) + 1), am, abs(am + spin))
 
 
 class TermTable:
@@ -354,7 +387,7 @@ def subshell_terms(orbital_type, shell, l, e_num):
         am, spin = calc_vals(comb)
         if am < 0 or spin < 0:
             continue
-        t.increment(int(2 * spin + 1), am)
+        t.increment(int(2 * abs(spin) + 1), abs(am))
 
     return t
 

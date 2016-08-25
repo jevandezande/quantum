@@ -202,3 +202,18 @@ def test_all_atomic_term_tables():
     assert_equal(next(tables), two_p1)
     two_p2 = subshell_terms('atomic', 2, 1, 2)
     assert_equal(next(tables), two_p2)
+
+
+def test_SOTermSymbol():
+    iterator = atomic_spinorbitals_iterator(1, 0)
+    occ1 = list(occupy(iterator, 1))
+    assert_equal(find_term_symbol(occ1[0], j=True), SOTermSymbol(2, 0, Frac(1, 2)))
+
+    iterator = atomic_spinorbitals_iterator(1, 0)
+    occ1 = list(occupy(iterator, 1))
+    assert_equal(find_term_symbol(occ1[0], j=True), SOTermSymbol(2, 0, Frac(1, 2)))
+
+    orbs1 = [AtomicSpinOrbital(n=3, l=2, ml=-2, spin='alpha'),
+             AtomicSpinOrbital(n=5, l=4, ml=-1, spin='beta')]
+    assert_equal(calc_vals(orbs1), (-3, 0))
+    assert_equal(find_term_symbol(orbs1, j=True), SOTermSymbol(1, 3, 3))
