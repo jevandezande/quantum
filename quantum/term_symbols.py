@@ -328,8 +328,8 @@ class AtomicTermTable(TermTable):
         :returns AtomicTermTable:
         """
         cleaned = deepcopy(self)
-        for i in reversed(range(len(cleaned.table))):
-            for j in reversed(range(len(cleaned.table[0]))):
+        for i in reversed(range(self.height)):
+            for j in reversed(range(self.width)):
                 count = cleaned.table[i, j]
                 cleaned.table[:i + 1, :j + 1] -= count
                 cleaned.table[i, j] = count
@@ -351,8 +351,8 @@ class DiatomicTermTable(TermTable):
         :returns DiatomicTermTable:
         """
         cleaned = deepcopy(self)
-        for i in reversed(range(len(cleaned.table))):
-            for j in reversed(range(len(cleaned.table[0]))):
+        for i in reversed(range(self.height)):
+            for j in reversed(range(self.width)):
                 count = cleaned.table[i, j]
                 cleaned.table[:i + 1, j] -= count
                 cleaned.table[i, j] = count
