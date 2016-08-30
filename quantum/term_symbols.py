@@ -368,7 +368,8 @@ def subshell_terms(orbital_type, shell, l, e_num):
     :param e_num: number of electrons
     :returns: TermTable of corresponding to orbital_type
     """
-    max_am = l * e_num
+    a, b = int(np.ceil(e_num/2)), int(np.floor(e_num / 2))
+    max_am = sum(range(l - a + 1, l + 1)) + sum(range(l - b + 1, l + 1))
     if e_num <= 2 * l + 1:
         max_mult = e_num + 1
     else:
