@@ -167,11 +167,12 @@ def find_term_symbol(orbs, j=False):
 
 
 class TermTable:
-    def __init__(self, max_mult, max_am):
+    def __init__(self, max_mult, max_am, clean=False):
         """Set up the table
 
         :param max_mult: maximum possible multiplicity
         :param max_am: maximum possible angular momentum
+        :param clean: boolean describing if microstates have been removed
         """
         self.max_am = max_am
         self.width = max_am + 1
@@ -180,6 +181,7 @@ class TermTable:
         self.height = (max_mult + 1) // 2
         self.table = np.zeros((self.height, self.width), dtype=np.dtype(int))
         self.orbital_type = None
+        self._clean = clean
 
     def __str__(self):
         """Flips the table for printing in standard form"""
@@ -333,6 +335,7 @@ class AtomicTermTable(TermTable):
                 count = cleaned.table[i, j]
                 cleaned.table[:i + 1, :j + 1] -= count
                 cleaned.table[i, j] = count
+        cleaned._clean = True
 
         return cleaned
 
@@ -356,6 +359,7 @@ class DiatomicTermTable(TermTable):
                 count = cleaned.table[i, j]
                 cleaned.table[:i + 1, j] -= count
                 cleaned.table[i, j] = count
+        cleaned._clean = True
 
         return cleaned
 
