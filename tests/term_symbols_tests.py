@@ -1,4 +1,4 @@
-from fractions import Fraction
+from fractions import Fraction as Frac
 
 from nose.tools import *
 from numpy.testing import assert_equal as np_assert_equal
@@ -16,8 +16,8 @@ def teardown():
 
 
 def test_spin_iterator():
-    a = Fraction(1, 2)
-    b = Fraction(-1, 2)
+    a = Frac(1, 2)
+    b = Frac(-1, 2)
     assert_equal(list(spin_iterator()), [a, b])
 
 
@@ -91,6 +91,8 @@ def test_calc_vals_and_term_symbol():
              AtomicSpinOrbital(n=5, l=4, ml=-1, spin='beta')]
     assert_equal(calc_vals(orbs1), (-3, 0))
     assert_equal(find_term_symbol(orbs1), TermSymbol(1, 3))
+
+    assert_equal(TermSymbol(3, 2).num_microstates(), 15)
 
 
 def test_atomic_terms_table():
@@ -217,3 +219,6 @@ def test_SOTermSymbol():
              AtomicSpinOrbital(n=5, l=4, ml=-1, spin='beta')]
     assert_equal(calc_vals(orbs1), (-3, 0))
     assert_equal(find_term_symbol(orbs1, j=True), SOTermSymbol(1, 3, 3))
+
+    j_states = list(TermSymbol(3, 2).form_jstates())
+    assert_equal(j_states, [SOTermSymbol(3, 2, 1), SOTermSymbol(3, 2, 2), SOTermSymbol(3, 2, 3)])

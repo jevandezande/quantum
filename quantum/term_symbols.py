@@ -125,6 +125,45 @@ class TermSymbol:
 
         return terms
 
+    def num_microstates(self):
+        """
+        Number of microstates for the TermSymbol
+
+        e.g. ^3D
+
+        m\l |-D -P | S  P  D |      s\l |-D -P | S  P  D |
+        ----------------------      ----------------------
+        3   | 1  1 | 1  1  1 |      1   | 1  1 | 1  1  1 |
+        1   | 1  1 | 1  1  1 |  ==  0   | 1  1 | 1  1  1 |
+        ----------------------      ----------------------
+        3   | 1  1 | 1  1  1 |     -1   | 1  1 | 1  1  1 |
+        ----------------------      ----------------------
+        
+        e.g. ^4F
+
+        | m\l |-F -D -P | S  P  D |     | s\l |-F -D -P | S  P  D  F |
+        ---------------------------     ------------------------------
+        |  4  | 1  1  1 | 1  1  1 |     | 3/2 | 1  1  1 | 1  1  1  1 |
+        |  2  | 1  1  1 | 1  1  1 |     | 1/2 | 1  1  1 | 1  1  1  1 |
+        ---------------------------     ------------------------------
+        |  2  | 1  1  1 | 1  1  1 |     |-1/2 | 1  1  1 | 1  1  1  1 |
+        |  4  | 1  1  1 | 1  1  1 |     |-3/2 | 1  1  1 | 1  1  1  1 |
+        ---------------------------     ------------------------------
+        """
+        return (2*self.am + 1 ) * self.mult
+
+    def form_jstates(self):
+        """
+        Generates the SOTermSymbol states that can arise from the given TermSymbol
+        """
+        s = Frac(int(self.mult - 1), 2)
+        max_j = self.am + s
+        # Cannot go below 0 for j value
+        min_j = max(self.am - s, s%1)
+        span = max_j - min_j
+        for j in min_j + np.arange(span + 1):
+            yield SOTermSymbol(self.mult, self.am, j)
+
 
 class SOTermSymbol(TermSymbol):
     
