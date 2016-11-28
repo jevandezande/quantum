@@ -64,14 +64,14 @@ class PointGroup:
             ops.append(op.replace('σ', '\\sigma'))
 
         line_form = '{:5s}&' + '{:^5d}&'*len(ops)
-        extras_form = '{:^12s}&{:^16s}\n'
+        extras_form = '{:^12s}&{:^16s} \\\\\n'
         out = '\\begin{tabular}{l' + ' c'*(len(ops) + 2) + '}\\hl\n'
         out += '{:5s}&'.format(self.name) + ('{:^5s}&'*len(ops)).format(*ops) + '    Lin Rot     &        Quad        \\hl\n'
         for irrep, line, lin_rot, quad in zip(self.irreps, self.table, self.lin_rot, self.quad):
             lin_rot = str(lin_rot)[1:-1].strip(',').replace("'", '')
             quad = str(quad)[1:-1].strip(',').replace("'", '')
             out += line_form.format(irrep, *line) + extras_form.format(lin_rot, quad)
-        return out + '\\hl\n\\end{tabular}'
+        return out.strip('\\') + '\\hl\n\\end{tabular}'
 
     def irrep(self, name):
         """
@@ -319,6 +319,22 @@ C3v = PointGroup('C3v', c3v_ops, c3v_coeffs, c3v_irreps, c3v_table, c3v_lin_rot,
 
 # Dnh
 #####
+d2h_table = np.array([
+    [ 1,  1,  1,  1,  1,  1,  1,  1],
+    [ 1,  1, -1, -1,  1,  1, -1, -1],
+    [ 1, -1,  1, -1,  1, -1,  1, -1],
+    [ 1, -1, -1,  1,  1, -1, -1,  1],
+    [ 1,  1,  1,  1, -1, -1, -1, -1],
+    [ 1,  1, -1, -1, -1, -1,  1,  1],
+    [ 1, -1,  1, -1, -1,  1, -1,  1],
+    [ 1, -1, -1,  1, -1,  1,  1, -1],
+])
+d2h_ops = ['E', 'C2(z)', 'C2(y)', 'C2(x)', 'i', 'σ(xy)', 'σ(xz)', 'σ(yz)']
+d2h_coeffs = [1, 1, 1, 1, 1, 1, 1, 1]
+d2h_irreps = ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']
+d2h_lin_rot = ['', 'Rz', 'Ry', 'Rx', '', 'z', 'y', 'x']
+d2h_quad = [('x2', 'y2', 'z2'), 'xy', 'xz', 'yz', '', '', '', '']
+D2h = PointGroup('D2h', d2h_ops, d2h_coeffs, d2h_irreps, d2h_table, d2h_lin_rot, d2h_quad)
 
 d3h_table = np.array([
     [ 1,  1,  1,  1,  1,  1],
@@ -459,4 +475,4 @@ ih_quad = ['x2+y2+z2', '', '', '', (('2z2-x-2y2', 'x2-y2', 'xy', 'xz', 'yz'),), 
 Ih = PointGroup('Ih', ih_ops, ih_coeffs, ih_irreps, ih_table, ih_lin_rot, ih_quad)
 
 
-pg_list = [C1, Ci, Cs, C2, C3, C4, C2v, C3v, D3h, D4h, D2d, D3d, Td, Oh, Ih]
+pg_list = [C1, Ci, Cs, C2, C3, C4, C2v, C3v, D2h, D3h, D4h, D2d, D3d, Td, Oh, Ih]
