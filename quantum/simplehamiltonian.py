@@ -39,11 +39,11 @@ class SimpleHamiltonian:
 
     def approx(self, method='full'):
         """
-        Return the hamiltonian correspong to the given method
+        Return the hamiltonian corresponding to the given method
         """
         method = method.lower()
         hamiltonian = self.hamiltonian.copy()
-       
+
         if method == 'full' or method == 'full-ci':
             pass
         elif method == 'hf':
@@ -89,7 +89,7 @@ class SimpleHamiltonian:
         im = ax.imshow(self.hamiltonian, interpolation='nearest', cmap=cmap)
 
         return im
-        
+
 
 def scale(mat):
     """
