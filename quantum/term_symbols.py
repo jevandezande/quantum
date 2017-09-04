@@ -68,8 +68,7 @@ class TermSymbol:
         """
         :param mult: multiplicity of the term symbol
         :param am: angular momentum of the term symbol
-        :param orbital_type: the type of orbitals that are used (i.e. atomic or
-            diatomic)
+        :param orbital_type: the type of orbitals that are used (i.e. atomic or diatomic)
         """
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity must be greater than 0 and "
@@ -81,14 +80,14 @@ class TermSymbol:
         elif orbital_type == 'diatomic':
             self.am_symbols = DIATOMIC_AM_SYMBOLS_UP
         else:
-            raise SyntaxError("Only atomic and diatomic orbitals are currently"
-                              "supported")
+            raise SyntaxError("Only atomic and diatomic orbitals are currently supported.")
+        self.orbital_type = orbital_type
 
     def __str__(self):
         return '{}{}'.format(self.mult, self.am_symbols[abs(self.am)])
 
     def __repr__(self):
-        return str(self)
+        return "<{}TermSymbol {}>".format(self.orbital_type.title(), str(self))
 
     def __eq__(self, o):
         if self.am == o.am and self.mult == o.mult:
@@ -200,9 +199,12 @@ class SOTermSymbol(TermSymbol):
     def __str__(self):
         return '{}{}_{}'.format(self.mult, self.am_symbols[abs(self.am)], self.j)
 
+    def __repr__(self):
+        return "<{}SOTermSymbol {}>".format(self.orbital_type.title(), str(self))
+
     def __eq__(self, o):
         if not isinstance(o, SOTermSymbol):
-            raise SyntaxError("Cannot compare SOTermSymbol and {}".format(type(o)))
+            raise SyntaxError("Cannot compare SOTermSymbol and {}.".format(type(o)))
         if self.am == o.am and self.mult == o.mult and self.j == o.j:
             return True
         return False
@@ -242,6 +244,9 @@ class TermTable:
         self.orbital_type = None
         self._clean = clean
 
+    def __repr__(self):
+        return "TermTable({})".format(self.table.tolist())
+
     def __str__(self):
         """Flips the table for printing in standard form"""
         return str(self.table[::-1])
@@ -263,7 +268,7 @@ class TermTable:
         TODO: Fill out table
         """
         if not isinstance(o, TermTable) or type(self) != type(o):
-            raise SyntaxError("Can only multiply a TermTable by a TermTable")
+            raise SyntaxError("Can only multiply a TermTable by a TermTable.")
         max_mult = self.max_mult + o.max_mult - 1
         max_am = self.max_am + o.max_am
         t = TermTable(max_mult, max_am)
@@ -315,8 +320,8 @@ class TermTable:
     def string(self, style='table'):
         """
         Print the table in a nice format
-        :param style: the style the table should be output in
-                        table, latex, latex-crossed, latex-table
+        :param style: the style the table should be output in table, latex,
+                      latex-crossed, latex-table
         :returns: string in specified form
         """
         out = ''
@@ -439,7 +444,7 @@ class DiatomicTermTable(TermTable):
 
 def subshell_terms(orbital_type, shell, l, e_num):
     """
-    Iterate over all possible combinations of electrons in orbitals
+    Iterate over all possible combinations of electrons in orbitals.
     :param orbital_type: type of orbitals desired
     :param shell: orbital shell
     :param l: orbital angular momentum
@@ -473,7 +478,7 @@ def subshell_terms(orbital_type, shell, l, e_num):
 
 def multiple_subshell_terms(orbital_type, *subshells):
     """
-    Iterate over all possible combinations of electrons in orbitals
+    Iterate over all possible combinations of electrons in orbitals.
     Currently only for atomic orbitals
     :param subshells:  an iterable where each term is (shell, l, e_num)
     :returns: TermTable
