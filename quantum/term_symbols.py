@@ -14,18 +14,22 @@ def spin_iterator():
 
 
 def atomic_spinorbitals_iterator(shell, l):
-    """Makes an iterator over all SpinOrbitals in the specified subshell
+    """
+    Makes an iterator over all SpinOrbitals in the specified subshell
     :param shell: orbital shell
     :param l: angular momentum of the desired subshell
+    :yields: all possible AtomicSpinOrbitals
     """
     for ml, spin in product(range(l, -l - 1, -1), spin_iterator()):
         yield AtomicSpinOrbital(n=shell, l=l, ml=ml, spin=spin)
 
 
 def diatomic_spinorbitals_iterator(shell, l):
-    """Makes an iterator over all DiatomicSpinOrbitals in specified subshell
+    """
+    Makes an iterator over all DiatomicSpinOrbitals in specified subshell
     :param shell: orbital shell
     :param l: angular momentum of the desired subshell
+    :yields: all possible DiatomicSpinOrbitals
     """
     mls = [l, -l] if l > 0 else [0]
     for ml, spin in product(mls, spin_iterator()):
@@ -33,16 +37,20 @@ def diatomic_spinorbitals_iterator(shell, l):
 
 
 def occupy(iterator, e_num):
-    """Make an iterator of all possible combinations
+    """
+    Make an iterator of all possible combinations
     :param iterator: an orbital iterator
     :param e_num: number of electrons
+    :returns: all possible combinations
     """
-    return combinations(iterator, e_num)
+    yield from combinations(iterator, e_num)
 
 
 def calc_vals(orbs):
-    """Calculate the total angular momentum and spin
+    """
+    Calculate the total angular momentum and spin
     :param orbs: an iterator containing Orbitals
+    :returns: (angular momentum, spin)
     """
     am = 0
     spin = 0
@@ -64,8 +72,8 @@ class TermSymbol:
             diatomic)
         """
         if not TermSymbol.check(mult, am):
-            raise SyntaxError("Multiplicity must be greater than 0 and"
-                              "multiplicity and angular momentum must be ints")
+            raise SyntaxError("Multiplicity must be greater than 0 and "
+                              "multiplicity and angular momentum must be ints.")
         self.am = abs(am)
         self.mult = mult
         if orbital_type == 'atomic':
@@ -89,7 +97,12 @@ class TermSymbol:
 
     @staticmethod
     def check(mult, am):
-        """Check if the multiplicity and angular momentum are valid"""
+        """
+        Check if the multiplicity and angular momentum are valid
+        :param mult: multiplicity
+        :param am: angular momentum
+        :returns: bool of validity
+        """
         if mult < 1 or not isinstance(am, int):
             return False
         if not isinstance(mult, int) and not (isinstance(mult, Frac) and mult.denominator == 1):
@@ -98,23 +111,26 @@ class TermSymbol:
 
     @staticmethod
     def latex(mult, am, orbital_type):
-        """Return a latex based representation of the term symbol
+        """
+        Generate a latex based representation of the term symbol
         :param mult: multiplicity of the term symbol
         :param am: angular momentum of the term symbol
+        :returns: string of LaTeX representation
         """
         if orbital_type == 'atomic':
             am_symbols = ATOMIC_AM_SYMBOLS_UP
         elif orbital_type == 'diatomic':
             am_symbols = DIATOMIC_AM_SYMBOLS_UP
         if not TermSymbol.check(mult, am):
-            raise SyntaxError("Multiplicity and angular momentum must be ints")
+            raise SyntaxError("Multiplicity and angular momentum must be ints.")
         return "$^{}${}".format(mult, am_symbols[am])
 
     @staticmethod
     def table(min_mult, max_mult, min_am, max_am, orbital_type):
         """
-        :param orbital_type: the type of orbitals that are used (i.e. atomic or
-                                                                 diatomic)
+        Generate a table of TermSymbols
+        :param orbital_type: the type of orbitals that are used (i.e. atomic or diatomic)
+        :returns: 2D list of TermSymbols
         """
         height = int((max_mult - min_mult) / 2)
         width = int(max_am - min_am)
@@ -138,7 +154,7 @@ class TermSymbol:
         ----------------------      ----------------------
         3   | 1  1 | 1  1  1 |     -1   | 1  1 | 1  1  1 |
         ----------------------      ----------------------
-        
+
         e.g. ^4F
 
         | m\l |-F -D -P | S  P  D |     | s\l |-F -D -P | S  P  D  F |
@@ -155,6 +171,7 @@ class TermSymbol:
     def form_jstates(self):
         """
         Generates the SOTermSymbol states that can arise from the given TermSymbol
+        :yields: all jstate SOTermSymbols
         """
         s = Frac(int(self.mult - 1), 2)
         max_j = self.am + s
@@ -166,7 +183,7 @@ class TermSymbol:
 
 
 class SOTermSymbol(TermSymbol):
-    
+
     def __init__(self, mult, am, j, orbital_type='atomic'):
         """
         :param mult: multiplicity of the term symbol
@@ -193,9 +210,11 @@ class SOTermSymbol(TermSymbol):
 
 
 def find_term_symbol(orbs, j=False):
-    """Generate the term symbol for the given set of orbitals
-    :param orbs: an iterable containing SpinOrbitals
+    """
+    Generate the term symbol for the given set of orbitals
     WARNING: It does not check if the set of orbitals is valid
+    :param orbs: an iterable containing SpinOrbitals
+    :returns: TermSymbol
     """
     am, spin = calc_vals(orbs)
     if not j:
@@ -207,10 +226,11 @@ def find_term_symbol(orbs, j=False):
 
 class TermTable:
     def __init__(self, max_mult, max_am, clean=False):
-        """Set up the table
+        """
+        Set up the TermTable
 
-        :param max_mult: maximum possible multiplicity
-        :param max_am: maximum possible angular momentum
+        :param max_mult: maximum multiplicity of the table (height)
+        :param max_am: maximum angular momentum of the table (width)
         :param clean: boolean describing if microstates have been removed
         """
         self.max_am = max_am
@@ -234,7 +254,8 @@ class TermTable:
         return True
 
     def __mul__(self, o):
-        """Multiple two term tables to get the product table
+        """
+        Multiple two term tables to get the product table
 
         WARNING: Do not multiply TermTables coming from the same subshell
         WARNING: Do not multiply TermTables that have not been cleaned
@@ -292,9 +313,11 @@ class TermTable:
         self.table[(mult - 1) // 2][am] += 1
 
     def string(self, style='table'):
-        """Print the table in a nice format
+        """
+        Print the table in a nice format
         :param style: the style the table should be output in
                         table, latex, latex-crossed, latex-table
+        :returns: string in specified form
         """
         out = ''
         if style == 'table':
@@ -351,22 +374,28 @@ class TermTable:
 
 
 class AtomicTermTable(TermTable):
-    """A table that contains the number of terms at a specified multiplicity and
+    """
+    A table that contains the number of terms at a specified multiplicity and
     angular momentum.
 
     Can remove all manifestations of terms at lower multiplicity or angular
     momentum. Thus producing the standard scorecard.
     """
 
-    def __init__(self, max_mult, max_am):
-        super().__init__(max_mult, max_am)
+    def __init__(self, max_mult, max_am, clean=False):
+        """
+        :param max_mult: maximum multiplicity of the table (height)
+        :param max_am: maximum angular momentum of the table (width)
+        """
+        super().__init__(max_mult, max_am, clean)
         self.orbital_type = 'atomic'
 
     def cleaned(self):
-        """Create a new AtomicTermTable with all lower manifestations of terms
+        """
+        Create a new AtomicTermTable with all lower manifestations of terms
         removed.
         i.e. subtract the value of x=mult, y=am from terms where x<mult, y<am
-        :returns AtomicTermTable:
+        :returns: AtomicTermTable
         """
         cleaned = deepcopy(self)
         for i in reversed(range(self.height)):
@@ -382,15 +411,20 @@ class AtomicTermTable(TermTable):
 class DiatomicTermTable(TermTable):
     """A diatomic version of TermTable"""
 
-    def __init__(self, max_mult, max_am):
-        super().__init__(max_mult, max_am)
+    def __init__(self, max_mult, max_am, clean=False):
+        """
+        :param max_mult: maximum multiplicity of the table (height)
+        :param max_am: maximum angular momentum of the table (width)
+        """
+        super().__init__(max_mult, max_am, clean=False)
         self.orbital_type = 'diatomic'
 
     def cleaned(self):
-        """Create a new DiatomicTermTable with all lower manifestations of terms
+        """
+        Create a new DiatomicTermTable with all lower manifestations of terms
         removed.
         i.e. subtract the value of x=mult, y=am from terms where x<mult, y=am
-        :returns DiatomicTermTable:
+        :returns: DiatomicTermTable
         """
         cleaned = deepcopy(self)
         for i in reversed(range(self.height)):
@@ -404,12 +438,13 @@ class DiatomicTermTable(TermTable):
 
 
 def subshell_terms(orbital_type, shell, l, e_num):
-    """Iterate over all possible combinations of electrons in orbitals
+    """
+    Iterate over all possible combinations of electrons in orbitals
     :param orbital_type: type of orbitals desired
     :param shell: orbital shell
     :param l: orbital angular momentum
     :param e_num: number of electrons
-    :returns: TermTable of corresponding to orbital_type
+    :returns: TermTable corresponding to orbital_type
     """
     a, b = int(np.ceil(e_num/2)), int(np.floor(e_num / 2))
     max_am = sum(range(l - a + 1, l + 1)) + sum(range(l - b + 1, l + 1))
@@ -437,13 +472,14 @@ def subshell_terms(orbital_type, shell, l, e_num):
 
 
 def multiple_subshell_terms(orbital_type, *subshells):
-    """Iterate over all possible combinations of electrons in orbitals
+    """
+    Iterate over all possible combinations of electrons in orbitals
     Currently only for atomic orbitals
     :param subshells:  an iterable where each term is (shell, l, e_num)
     :returns: TermTable
     """
     if len(subshells) == 0:
-        raise SyntaxError("Need subshells")
+        raise SyntaxError("Need subshells.")
 
     if orbital_type not in ['atomic', 'diatomic']:
         SyntaxError("Invalid orbital type.")
@@ -484,12 +520,14 @@ def multiple_subshell_terms(orbital_type, *subshells):
 
 
 def all_atomic_term_tables(max_am):
-    """Iterate through all the AtomicTermTables up to a specified angular momentum
+    """
+    Iterate through all the AtomicTermTables up to a specified angular momentum
 
     Since particle-hole equivalence makes the term symbol tables symmetric
     around the point where the number of electrons equals 2*am +1
     e.g. d^2 is equivalent to d^8
     :param max_am: maximum desired angular momentum subshell
+    :yields: TermTable
     """
 
     for am in range(max_am):
