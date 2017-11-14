@@ -4,11 +4,20 @@ from numpy import pi as π, cos, exp
 
 class PointGroup:
     def __init__(self, name, ops, coeffs, irreps, table, lin_rot, quad):
+        """
+        :param name: the name of the point group
+        :param ops: list of symmetry operation names
+        :param coeffs: coefficients of the irreps
+        :param irreps: list of irreducible representation names
+        :param table: characters of the symmetry operations in the irreducible representation
+        :param lin_rot: linear and rotation symmetry transformations
+        :param quad: quadratic symmetry transformations
+        """
         if not (len(irreps), len(ops)) == table.shape:
-            raise Exception('Invalid size, table shape does not match irreps x ops: {} != {} x {}'.format(
-                    table.shape, len(irreps), len(ops)))
+            raise Exception(f'Invalid size, table shape does not match irreps x ops: ' +
+                '{table.shape} != {len(irreps)} x {len(ops)}')
         if not len(coeffs) == len(ops):
-            raise Exception('Mismatch lengths of coefficients and operations.')
+            raise Exception('Mismatched lengths of coefficients and operations.')
 
         self.name = name
         self.ops = ops
@@ -32,19 +41,22 @@ class PointGroup:
                     q = (q, )
             self.quad.append(q)
 
+    def __repr__(self):
+        return f'<PointGroup {self.name}>'
+
     def __str__(self):
         """
-        Print the table nicely
+        Generate a nice string of the table
         """
         line_form = '|{:5s}|' + '{:^5g}|'*len(self.ops)
-        extras_form = '{:^16s}|{:^20s}|\n'
-        out = '|{:5s}|'.format(self.name) + ('{:^5s}|'*len(self.ops)).format(*self.ops) + '    Lin Rot     |        Quad        |\n'
+        out = f'|{self.name:5s}|' + ('{:^5s}|'*len(self.ops)).format(*self.ops) + '    Lin Rot     |        Quad        |\n'
         horiz_line = '-'*(len(out) - 1) + '\n'
         out = horiz_line + out + horiz_line
         for irrep, line, lin_rot, quad in zip(self.irreps, self.table, self.lin_rot, self.quad):
+            out += line_form.format(irrep, *line)
             lin_rot = str(lin_rot)[1:-1].strip(',').replace("'", '')
             quad = str(quad)[1:-1].strip(',').replace("'", '')
-            out += line_form.format(irrep, *line) + extras_form.format(lin_rot, quad)
+            out += f'{lin_rot:^16s}|{quad:^20s}|\n'
         return out + horiz_line
 
     def __iter__(self):
@@ -56,22 +68,22 @@ class PointGroup:
 
     def latex(self):
         """
-        Print the table in latex form
+        Generate a string of the table in latex form
         """
         # clean ops
         ops = []
         for op in self.ops:
-            ops.append(op.replace('σ', '\\sigma'))
+            ops.append(op.replace('σ', '\\sigma '))
 
         line_form = '{:5s}&' + '{:^5d}&'*len(ops)
-        extras_form = '{:^12s}&{:^16s} \\\\\n'
         out = '\\begin{tabular}{l' + ' c'*(len(ops) + 2) + '}\\hl\n'
-        out += '{:5s}&'.format(self.name) + ('{:^5s}&'*len(ops)).format(*ops) + '    Lin Rot     &        Quad        \\hl\n'
+        out += f'{self.name:5s}&' + ('{:^5s}&'*len(ops)).format(*ops) + '    Lin Rot     &        Quad        \\hl\n'
         for irrep, line, lin_rot, quad in zip(self.irreps, self.table, self.lin_rot, self.quad):
+            out += line_form.format(irrep, *line)
             lin_rot = str(lin_rot)[1:-1].strip(',').replace("'", '')
             quad = str(quad)[1:-1].strip(',').replace("'", '')
-            out += line_form.format(irrep, *line) + extras_form.format(lin_rot, quad)
-        return out.strip('\\') + '\\hl\n\\end{tabular}'
+            out += f'{lin_rot:^12s}&{quad:^16s} \\\\\n'
+        return out.rstrip('\\') + '\\hl\n\\end{tabular}'
 
     def irrep(self, name):
         """
@@ -115,6 +127,9 @@ class PointGroup:
 
     @staticmethod
     def check_orthogonality(pg):
+        """
+        Check if the given point group in orthogonal
+        """
         for i, line1 in enumerate(pg.table):
             for j, line2 in enumerate(pg.table):
                 val = 1/pg.order * sum(pg.coeffs * line1 * line2)
@@ -137,12 +152,15 @@ def reduce(gamma, pg):
         real = val.real
         imag = val.imag
         if abs(real - round(real)) > 1e-10 or imag > 1e-10:
-            raise Exception('Failed reduction, non-integer returned: {} Irrep: {}'.format(val, irrep))
+            raise Exception('Failed reduction, non-integer returned: {val} Irrep: {irrep}')
         reduction.append((int(round(real)), irrep))
     return reduction
 
 
 def vibrations(gamma, pg):
+    """
+    Determine the vibrations from a gamma
+    """
     reduction = reduce(gamma, pg)
     vibs = []
     for val, irrep in reduction:
@@ -193,7 +211,7 @@ def raman_active(irrep, pg):
 def classify_vibrations(vibs, pg):
     """
     Classify the vibrations as IR and/or Raman active
-    
+
     :param vibs: [(val, irrep), ...]
     :param pg: PointGroup
     :return: ir active [(val, irrep), ...], raman active [(val, irrep), ...]
@@ -223,7 +241,7 @@ c1_lin_rot = [('x', 'y', 'z', 'Rx', 'Ry', 'Rz')]
 c1_quad = [('x2', 'y2', 'z2', 'xy', 'xz', 'yz')]
 C1 = PointGroup('C1', ['E'], np.array([1]), ['A'], c1_table, c1_lin_rot, c1_quad)
 
- 
+
 cs_table = np.array([[1, 1],[1, -1]])
 cs_ops = ['E', 'σ_h']
 cs_coeffs = [1, 1]
@@ -241,9 +259,9 @@ ci_lin_rot = [('Rx', 'Ry', 'Rz'), ('x', 'y', 'z')]
 ci_quad = [('x2', 'y2', 'z2', 'xy', 'xz', 'yz'), ('',)]
 Ci = PointGroup('Ci', ci_ops, ci_coeffs, ci_irreps, ci_table, ci_lin_rot, ci_quad)
 
-
-# Cn
-####
+######
+# Cn #
+######
 c2_table = np.array([[1, 1],[1, -1]])
 c2_ops = ['E', 'C2']
 c2_coeffs = [1, 1]
@@ -274,8 +292,9 @@ c4_quad = [('x2+y2', 'z2'), ('x2-y2', 'xy'), 'xz', 'yz']
 C4 = PointGroup('C4', c4_ops, c4_coeffs, c4_irreps, c4_table, c4_lin_rot, c4_quad)
 
 
-# Cnv
-#####
+#######
+# Cnv #
+#######
 c2v_table = np.array([
     [ 1,  1,  1,  1],
     [ 1,  1, -1, -1],
@@ -303,22 +322,25 @@ c3v_quad = [('x2+y2', 'z2'), '', (('x2-y2', 'xy'), ('xz', 'yz'))]
 C3v = PointGroup('C3v', c3v_ops, c3v_coeffs, c3v_irreps, c3v_table, c3v_lin_rot, c3v_quad)
 
 
-# Cnh
-#####
+#######
+# Cnh #
+#######
 
 
 
 
 
-# Dn
-####
+######
+# Dn #
+######
 
 
 
 
 
-# Dnh
-#####
+#######
+# Dnh #
+#######
 d2h_table = np.array([
     [ 1,  1,  1,  1,  1,  1,  1,  1],
     [ 1,  1, -1, -1,  1,  1, -1, -1],
@@ -372,8 +394,9 @@ d4h_quad = [('x2+y2', 'z2'), '', 'x2-y2', 'xy', (('xz', 'yz'),), '', '', '', '',
 D4h = PointGroup('D4h', d4h_ops, d4h_coeffs, d4h_irreps, d4h_table, d4h_lin_rot, d4h_quad)
 
 
-# Dnd
-#####
+#######
+# Dnd #
+#######
 
 d2d_table = np.array([
     [ 1,  1,  1,  1,  1],
@@ -408,15 +431,17 @@ D3d = PointGroup('D3d', d3d_ops, d3d_coeffs, d3d_irreps, d3d_table, d3d_lin_rot,
 
 
 
-# Sn
-####
+######
+# Sn #
+######
 
 
 
 
 
-# Higher
-########
+##########
+# Higher #
+##########
 
 td_table = np.array([
     [ 1,  1,  1,  1,  1],
@@ -476,3 +501,23 @@ Ih = PointGroup('Ih', ih_ops, ih_coeffs, ih_irreps, ih_table, ih_lin_rot, ih_qua
 
 
 pg_list = [C1, Ci, Cs, C2, C3, C4, C2v, C3v, D2h, D3h, D4h, D2d, D3d, Td, Oh, Ih]
+pg_dict = {
+    'C1': C1,
+    'Ci': Ci,
+    'Cs': Cs,
+    'C2': C2,
+    'C3': C3,
+    'C4': C4,
+    'C2v': C2v,
+    'C3v': C3v,
+    'D2h': D2h,
+    'D3h': D3h,
+    'D4h': D4h,
+    'D2d': D2d,
+    'D3d': D3d,
+    'Td': Td,
+    'Oh': Oh,
+    'Ih': Ih,
+}
+
+

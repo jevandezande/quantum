@@ -7,9 +7,19 @@ from numpy.testing import assert_allclose
 from numpy.linalg import norm
 
 
-def test_print():
-    for pg in pg_list:
-        print(pg)
+def test_repr_str():
+    assert_equal(repr(C2v), '<PointGroup C2v>')
+    c2v_str = '''\
+---------------------------------------------------------------------
+|C2v  |  E  | C2  |σ(xz)|σ(yz)|    Lin Rot     |        Quad        |
+---------------------------------------------------------------------
+|A1   |  1  |  1  |  1  |  1  |       z        |     x2, y2, z2     |
+|A2   |  1  |  1  | -1  | -1  |       Rz       |         xy         |
+|B1   |  1  | -1  | -1  |  1  |     x, Ry      |         xz         |
+|B2   |  1  | -1  |  1  | -1  |     y, Rx      |         yz         |
+---------------------------------------------------------------------
+'''
+    assert_equal(str(C2v), c2v_str)
 
 
 def test_order():
@@ -19,7 +29,17 @@ def test_order():
 
 
 def test_latex():
-    print(C2v.latex())
+    D3h_latex = r'''\begin{tabular}{l c c c c c c c c}\hl
+D3h  &  E  & C3  & C'2 &\sigma h& S3  &\sigma v&    Lin Rot     &        Quad        \hl
+A'1  &  1  &  1  &  1  &  1  &  1  &  1  &            &   x2+y2, z2     \\
+A'2  &  1  &  1  & -1  &  1  &  1  & -1  &     Rz     &                 \\
+E'   &  2  & -1  &  0  &  2  & -1  &  0  &   (x, y)   &  (x2-y2, xy)    \\
+A"1  &  1  &  1  &  1  & -1  & -1  & -1  &            &                 \\
+A"2  &  1  &  1  & -1  & -1  & -1  &  1  &     z      &                 \\
+E"   &  2  & -1  &  0  & -2  &  1  &  0  &  (Rx, Ry)  &    (xz, yz)     \\
+\hl
+\end{tabular}'''
+    assert_equal(D3h.latex(), D3h_latex)
 
 
 def test_orthogonality():
@@ -29,7 +49,7 @@ def test_orthogonality():
             continue
         if not PointGroup.check_orthogonality(pg):
             print(pg)
-            raise Exception('{} is not orthogonal'.format(pg.name))
+            raise Exception(f'{pg.name} is not orthogonal')
 
 
 def test_reduce():
@@ -97,7 +117,6 @@ def test_pg_same_irrep():
     assert_false(pg_same_irrep(C2v, 2, 3)) # B1, B2
     assert_true(pg_same_irrep(C3, 1, 2)) # E_a, E_b
     assert_false(pg_same_irrep(Oh, 4, 9)) # T2g, T2u
-
 
 
 if __name__ == '__main__':
