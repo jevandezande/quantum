@@ -45,7 +45,7 @@ E"   &  2  & -1  &  0  & -2  &  1  &  0  &  (Rx, Ry)  &    (xz, yz)     \\
 def test_orthogonality():
     for pg in pg_list:
         # Cn are formulated differently, and thus orthogonality code does not work
-        if pg.name in ['C3', 'C4']:
+        if pg.name in ['C3', 'C4', 'C5']:
             continue
         if not PointGroup.check_orthogonality(pg):
             print(pg)

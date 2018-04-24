@@ -15,7 +15,7 @@ class PointGroup:
         """
         if not (len(irreps), len(ops)) == table.shape:
             raise Exception(f'Invalid size, table shape does not match irreps x ops: ' +
-                '{table.shape} != {len(irreps)} x {len(ops)}')
+                f'{table.shape} != {len(irreps)} x {len(ops)}')
         if not len(coeffs) == len(ops):
             raise Exception('Mismatched lengths of coefficients and operations.')
 
@@ -274,7 +274,11 @@ C2 = PointGroup('C2', c2_ops, c2_coeffs, c2_irreps, c2_table, c2_lin_rot, c2_qua
 # 2j == 2*sqrt(-1)
 e = exp(2j*π/3)
 es = np.conj(e)
-c3_table = np.array([[1, 1, 1], [1, e, es], [1, es, e]])
+c3_table = np.array([
+    [1,  1,  1],
+    [1,  e, es],
+    [1, es,  e]
+])
 c3_ops = ['E', 'C3', 'C3^2']
 c3_coeffs = [1, 1, 1]
 c3_irreps = ['A', 'E_a', 'E_b']
@@ -283,13 +287,34 @@ c3_quad = [('x2+y2', 'z2'), (('x2-y2', 'xy'),), (('xz', 'yz'),)]
 C3 = PointGroup('C3', c3_ops, c3_coeffs, c3_irreps, c3_table, c3_lin_rot, c3_quad)
 
 
-c4_table = np.array([[1, 1, 1, 1], [1, -1, 1, -1], [1, 1j, -1,-1j], [1,-1j, -1, 1j]])
+c4_table = np.array([
+    [1,  1,  1,  1],
+    [1, -1,  1, -1],
+    [1, 1j, -1,-1j],
+    [1,-1j, -1, 1j]
+])
 c4_ops = ['E', 'C4', 'C2', 'C4^3']
 c4_coeffs = [1, 1, 1, 1]
 c4_irreps = ['A', 'B', 'E_a', 'E_b']
 c4_lin_rot = [('z', 'Rz'), '', ('x+iy', 'Rx+iRy'), ('x-iy', 'Rx-iRy')]
 c4_quad = [('x2+y2', 'z2'), ('x2-y2', 'xy'), 'xz', 'yz']
 C4 = PointGroup('C4', c4_ops, c4_coeffs, c4_irreps, c4_table, c4_lin_rot, c4_quad)
+
+e = exp(2j*π/5)
+es = np.conj(e)
+c5_table = np.array(
+    [[1,  1,     1,      1,      1   ],
+     [1,  e,    e**2,   es**2,  es   ],
+     [1, es,    es**2,  e**2,    e   ],
+     [1, e**2,   es,     e,     es**2],
+     [1, es**2,  e,      es,    e**2 ],
+])
+c5_ops = ['E', 'C5', 'C5^2', 'C5^3', 'C5^4']
+c5_coeffs = [1, 1, 1, 1, 1]
+c5_irreps = ['A', 'E_1a', 'E_1b', 'E_2a', 'E_2b']
+c5_lin_rot = [('z', 'Rz'), ('x+iy', 'Rx+iRy'), ('x-iy', 'Rx-iRy'), (), ()]
+c5_quad = [('x2+y2', 'z2'), (('xz', 'yz'),), (),  (('x2-y2', 'xy'),), ()]
+C5 = PointGroup('C5', c5_ops, c5_coeffs, c5_irreps, c5_table, c5_lin_rot, c5_quad)
 
 
 #######
