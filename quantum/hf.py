@@ -22,17 +22,12 @@ class Wavefunction:
 
         self.orbitals = orbitals
 
+    def __iter__(self):
+        for orbital in self.orbitals:
+            yield orbital
+
     def __str__(self):
-        return ' '.join(map(str, self.orbitals))
-
-    def close(self):
-        """
-        Find all closed shells and return string accordingly
-        """
-        pass
-
-    def orbs(self):
-        return self.orbitals
+        return ' '.join(map(str, self))
 
 
 class I:
@@ -44,11 +39,11 @@ class I:
         self.wfn = wavefunction
 
     def __str__(self):
-        return ' + '.join([f'I({orb},{orb})' for orb in self.wfn.orbs()])
+        return ' + '.join([f'I({orb},{orb})' for orb in self.wfn])
 
     def spin_integrate(self):
         spin_int_list = []
-        for orb in self.wfn.orbs():
+        for orb in self.wfn:
             spin_int_list.append('I({0},{0})'.format(orb.spatial_str()))
         return ' + '.join(spin_int_list)
 
@@ -61,8 +56,8 @@ class TwoElectron:
         self.wfn = wavefunction
 
         self.terms = []
-        for i, orb_i in enumerate(self.wfn.orbs()):
-            for j, orb_j in enumerate(self.wfn.orbs()[i + 1:], start=i+1):
+        for i, orb_i in enumerate(self.wfn):
+            for j, orb_j in enumerate(self.wfn.orbitals[i + 1:], start=i+1):
                 self.terms.append((orb_i, orb_j))
 
         self.spin_int = ''
@@ -71,12 +66,16 @@ class TwoElectron:
     def __str__(self):
         pass
 
+    def __iter__(self):
+        for term in self.terms:
+            yield term
+
     def spin_integrate(self, match_spin, name, group=False):
         """
         Perform spin integration
         """
         spin_int = []
-        for i, j in self.terms:
+        for i, j in self:
             if not match_spin or i.spin == j.spin:
                 spin_int.append(f'{name}({i.spatial_str()},{j.spatial_str()})')
 
@@ -90,7 +89,7 @@ class J(TwoElectron):
     Coulomb energy terms
     """
     def __str__(self):
-        return ' + '.join([f'J({i},{j})' for i, j in self.terms])
+        return ' + '.join([f'J({i},{j})' for i, j in self])
 
     def spin_integrate(self):
         return super().spin_integrate(False, 'J')
@@ -101,7 +100,7 @@ class K(TwoElectron):
     Exchange energy terms
     """
     def __str__(self):
-        return ' '.join([f'-K({i},{j})' for i, j in self.terms])
+        return ' '.join([f'-K({i},{j})' for i, j in self])
 
     def spin_integrate(self):
         return super().spin_integrate(True, '-K')
