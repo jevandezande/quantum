@@ -7,17 +7,17 @@ mat33 = np.matrix([[-1.0,  0.0, -0.4],
                    [-0.4, -0.1, -0.3]])
 
 # 4x4
-mat44 = np.matrix([[-1.0,  0.0,  -0.4,  0.0 ],
-                   [ 0.0, -0.4,  -0.1, -0.05],
-                   [-0.4, -0.1,  -0.3, -0.1 ],
-                   [ 0.0, -0.05, -0.1, -0.2 ]])
+mat44 = np.matrix([[-1.00,  0.00,  -0.40,  0.00],
+                   [ 0.00, -0.40,  -0.10, -0.05],
+                   [-0.40, -0.10,  -0.30, -0.10],
+                   [ 0.00, -0.05, -0.10, -0.20]])
 
 # 5x5
-mat55 = np.matrix([[-1.0,  0.0,  -0.4,  0.0 ,  0.0 ],
-                   [ 0.0, -0.4,  -0.1, -0.05,  0.0 ],
-                   [-0.4, -0.1,  -0.3, -0.1 , -0.2 ],
-                   [ 0.0, -0.05, -0.1, -0.2 , -0.1 ],
-                   [ 0.0,  0.0,  -0.2, -0.1 , -0.15]])
+mat55 = np.matrix([[-1.00,  0.00, -0.40,  0.00,  0.00],
+                   [ 0.00, -0.40, -0.10, -0.05,  0.00],
+                   [-0.40, -0.10, -0.30, -0.10, -0.20],
+                   [ 0.00, -0.05, -0.10, -0.20, -0.10],
+                   [ 0.00,  0.00, -0.20, -0.10, -0.15]])
 
 
 class SimpleHamiltonian:
@@ -48,7 +48,7 @@ class SimpleHamiltonian:
             pass
         elif method == 'hf':
             # Wipe out all excited contributions
-            hamiltonian[1:, :] = hamiltonian[:,1:] = 0
+            hamiltonian[1:, :] = hamiltonian[:, 1:] = 0
         elif method == 'cid':
             # Wipe out all singles contributions
             hamiltonian[1, :] = hamiltonian[:, 1] = 0
@@ -83,7 +83,6 @@ class SimpleHamiltonian:
     def plot(self, ax, cmap='default'):
         if cmap == 'default':
             cmap = plt.get_cmap('Oranges_r')
-            #cmap = plt.get_cmap('BuPu_r')
 
         ax.set_title(f'{self.name.upper()}: {self.energy(): >10.9f}')
         im = ax.imshow(self.hamiltonian, interpolation='nearest', cmap=cmap)
@@ -128,6 +127,3 @@ def run(mat):
     fig.colorbar(ims[-1])
 
     plt.show()
-
-
-#run(mat55)

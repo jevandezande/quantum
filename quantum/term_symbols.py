@@ -7,6 +7,7 @@ import numpy as np
 
 from quantum.orbitals import *
 
+
 def spin_iterator():
     """Iterate through alpha (1/2) and beta (-1/2) spins"""
     yield Frac(1, 2)
@@ -169,7 +170,7 @@ class TermSymbol:
         |  4  | 1  1  1 | 1  1  1 |     |-3/2 | 1  1  1 | 1  1  1  1 |
         ---------------------------     ------------------------------
         """
-        return (2*self.am + 1 ) * self.mult
+        return (2*self.am + 1) * self.mult
 
     def form_jstates(self):
         """
@@ -212,7 +213,6 @@ class SOTermSymbol(TermSymbol):
         if self.am == o.am and self.mult == o.mult and self.j == o.j:
             return True
         return False
-
 
 
 def find_term_symbol(orbs, j=False):

@@ -12,6 +12,7 @@ mat66 = -np.matrix([[100,30, 7, 7, 3, 3, 1, 0],
                     [  1, 1, 3, 3, 7, 7,60,30],
                     [  0, 1, 3, 3, 7, 7,30,40]])
 
+
 class ZHamiltonian:
     """
     A relativistic Hamiltonian class wherein the Hamiltonian is represented as a
@@ -31,7 +32,6 @@ class ZHamiltonian:
         self.sectors = sectors
         if sectors is None:
             self.sectors = [0]
-
 
     def energy(self):
         """
@@ -77,7 +77,6 @@ class ZHamiltonian:
                     hamiltonian[sectors[m + i]:, sectors[i-1]:sectors[i]] = 0
                     hamiltonian[sectors[i-1]:sectors[i], sectors[m + i]:] = 0
 
-
         elif isinstance(method, int):
             for a in self.sectors[method + 1:]:
                 hamiltonian[a:, 0:a] = hamiltonian[0:a, a:] = 0
@@ -115,7 +114,6 @@ def runZ(mat):
 
     ims = [h.approx(method).plot(ax) for method, ax in zip(methods, axes)]
 
-    #fig.colorbar(ims[-1])
     cbaxes = fig.add_axes([0.93, 0.27, 0.02, 0.46])
     cb = plt.colorbar(ims[1], cax=cbaxes)
 

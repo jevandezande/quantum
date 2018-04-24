@@ -23,7 +23,7 @@ class Orbital:
 
         if not isinstance(ml, int) or ml < -l or ml > l:
             raise SyntaxError("Projected angular momentum (ml) must be an integer such that -l <= ml <= l,"
-                                f"got: ml = {ml}, l = {l}")
+                              f"got: ml = {ml}, l = {l}")
 
         if spin == 1 or spin == Frac(1 / 2) or spin == 'alpha':
             self.spin = Frac(1 / 2)
@@ -48,7 +48,7 @@ class Orbital:
         return False
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
 
     def spatial_str(self):
         base = f'{self.n}{self.orb_symbol}'

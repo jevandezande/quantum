@@ -15,7 +15,7 @@ class PointGroup:
         """
         if not (len(irreps), len(ops)) == table.shape:
             raise Exception(f'Invalid size, table shape does not match irreps x ops: ' +
-                f'{table.shape} != {len(irreps)} x {len(ops)}')
+                            f'{table.shape} != {len(irreps)} x {len(ops)}')
         if not len(coeffs) == len(ops):
             raise Exception('Mismatched lengths of coefficients and operations.')
 
@@ -302,12 +302,12 @@ C4 = PointGroup('C4', c4_ops, c4_coeffs, c4_irreps, c4_table, c4_lin_rot, c4_qua
 
 e = exp(2j*π/5)
 es = np.conj(e)
-c5_table = np.array(
-    [[1,  1,     1,      1,      1   ],
-     [1,  e,    e**2,   es**2,  es   ],
-     [1, es,    es**2,  e**2,    e   ],
-     [1, e**2,   es,     e,     es**2],
-     [1, es**2,  e,      es,    e**2 ],
+c5_table = np.array([
+    [1,  1,     1,      1,      1   ],
+    [1,  e,    e**2,   es**2,  es   ],
+    [1, es,    es**2,  e**2,    e   ],
+    [1, e**2,   es,     e,     es**2],
+    [1, es**2,  e,      es,    e**2 ],
 ])
 c5_ops = ['E', 'C5', 'C5^2', 'C5^3', 'C5^4']
 c5_coeffs = [1, 1, 1, 1, 1]
@@ -495,7 +495,7 @@ oh_table = np.array([
     [ 3,  0, -1,  1, -1, -3, -1,  0,  1,  1],
     [ 3,  0,  1, -1, -1, -3,  1,  0,  1, -1]
 ])
-oh_ops = ['E', 'C3', 'C2', 'C4', "C4^2", 'i','S4', 'S6', 'σh', 'σd']
+oh_ops = ['E', 'C3', 'C2', 'C4', "C4^2", 'i', 'S4', 'S6', 'σh', 'σd']
 oh_coeffs = [1, 8, 6, 6, 3, 1, 6, 8, 3, 6]
 oh_irreps = ['A1g', 'A2g', 'Eg', 'T1g', 'T2g', 'A1u', 'A2u', 'Eu', 'T1u', 'T2u']
 oh_lin_rot = ['', '', '', (('Rx', 'Ry', 'Rz'),), '', '', '', '', (('x', 'y', 'z'),), '']
@@ -517,7 +517,7 @@ ih_table = np.array([
     [ 4, -1, -1,  1,  0, -4,  1,  1, -1,  0],
     [ 5,  0,  0, -1,  1, -5,  0,  0,  1, -1]
 ])
-ih_ops = ['E', 'C5', 'C5^2', 'C3', 'C2', 'i','S4', 'S6', 'σh', 'σd']
+ih_ops = ['E', 'C5', 'C5^2', 'C3', 'C2', 'i', 'S4', 'S6', 'σh', 'σd']
 ih_coeffs = [1, 12, 12, 20, 15, 1, 12, 12, 20, 15]
 ih_irreps = ['Ag', 'T1g', 'T2g', 'Gg', 'Hg', 'Au', 'T1u', 'T2u', 'Gu', 'Hu']
 ih_lin_rot = ['', (('Rx', 'Ry', 'Rz'),), '', '', '', '', (('x', 'y', 'z'),), '', '', '', '']
@@ -544,5 +544,3 @@ pg_dict = {
     'Oh': Oh,
     'Ih': Ih,
 }
-
-
