@@ -84,15 +84,19 @@ class TermSymbol:
         self.orbital_type = orbital_type
 
     def __str__(self):
-        return '{}{}'.format(self.mult, self.am_symbols[abs(self.am)])
+        return f'{self.mult}{self.am_symbol}'
 
     def __repr__(self):
-        return "<{}TermSymbol {}>".format(self.orbital_type.title(), str(self))
+        return f"<{self.orbital_type.title()}TermSymbol {self}>"
 
     def __eq__(self, o):
         if self.am == o.am and self.mult == o.mult:
             return True
         return False
+
+    @property
+    def am_symbol(self):
+        return self.am_symbols[abs(self.am)]
 
     @staticmethod
     def check(mult, am):
@@ -122,7 +126,7 @@ class TermSymbol:
             am_symbols = DIATOMIC_AM_SYMBOLS_UP
         if not TermSymbol.check(mult, am):
             raise SyntaxError("Multiplicity and angular momentum must be ints.")
-        return "$^{}${}".format(mult, am_symbols[am])
+        return f'$^{mult}${am_symbols[am]}'
 
     @staticmethod
     def table(min_mult, max_mult, min_am, max_am, orbital_type):
@@ -197,14 +201,14 @@ class SOTermSymbol(TermSymbol):
         self.j = j
 
     def __str__(self):
-        return '{}{}_{}'.format(self.mult, self.am_symbols[abs(self.am)], self.j)
+        return f'{mult}{self.am_symbol}_{self.j}'
 
     def __repr__(self):
-        return "<{}SOTermSymbol {}>".format(self.orbital_type.title(), str(self))
+        return f'<{self.orbital_type.title()}SOTermSymbol {self}>'
 
     def __eq__(self, o):
         if not isinstance(o, SOTermSymbol):
-            raise SyntaxError("Cannot compare SOTermSymbol and {}.".format(type(o)))
+            raise SyntaxError(f'Cannot compare SOTermSymbol and {type(o)}.')
         if self.am == o.am and self.mult == o.mult and self.j == o.j:
             return True
         return False
@@ -245,7 +249,7 @@ class TermTable:
         self._clean = clean
 
     def __repr__(self):
-        return "TermTable({})".format(self.table.tolist())
+        return f'TermTable({self.table.tolist()})'
 
     def __str__(self):
         """Flips the table for printing in standard form"""

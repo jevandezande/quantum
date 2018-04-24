@@ -76,13 +76,13 @@ class ZHamiltonian:
                 for i in range(1, len(sectors) - m):
                     hamiltonian[sectors[m + i]:, sectors[i-1]:sectors[i]] = 0
                     hamiltonian[sectors[i-1]:sectors[i], sectors[m + i]:] = 0
-                    
-                    
+
+
         elif isinstance(method, int):
             for a in self.sectors[method + 1:]:
                 hamiltonian[a:, 0:a] = hamiltonian[0:a, a:] = 0
         else:
-            raise Exception('Invalid method: {}'.format(method))
+            raise Exception(f'Invalid method: {method}')
 
         return ZHamiltonian(hamiltonian, name=method)
 
@@ -93,7 +93,7 @@ class ZHamiltonian:
         if cmap == 'default':
             cmap = plt.get_cmap('inferno')
 
-        ax.set_title('{:}: {: >8.3f}'.format(self.name, self.energy()))
+        ax.set_title(f'{self.name}: {self.energy(): >8.3f}')
         im = ax.imshow(self.hamiltonian, interpolation='nearest', cmap=cmap)
 
         return im
@@ -116,7 +116,7 @@ def runZ(mat):
     ims = [h.approx(method).plot(ax) for method, ax in zip(methods, axes)]
 
     #fig.colorbar(ims[-1])
-    cbaxes = fig.add_axes([0.93, 0.27, 0.02, 0.46]) 
+    cbaxes = fig.add_axes([0.93, 0.27, 0.02, 0.46])
     cb = plt.colorbar(ims[1], cax=cbaxes)
 
     plt.show()

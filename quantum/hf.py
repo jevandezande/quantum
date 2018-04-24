@@ -13,17 +13,17 @@ class Wavefunction:
         """
 
         if len(orbitals) == 0:
-            raise SyntaxError("Cannot make an empty wavefunction.")
+            raise SyntaxError('Cannot make an empty wavefunction.')
 
         self.orb_type = type(orbitals[0])
         for orb in orbitals:
             if type(orb) != self.orb_type:
-                raise SyntaxError("Cannot mix orbital types.")
+                raise SyntaxError('Cannot mix orbital types.')
 
         self.orbitals = orbitals
 
     def __str__(self):
-        return " ".join(map(str, self.orbitals))
+        return ' '.join(map(str, self.orbitals))
 
     def close(self):
         """
@@ -44,13 +44,13 @@ class I:
         self.wfn = wavefunction
 
     def __str__(self):
-        return " + ".join(["I({0},{0})".format(orb) for orb in self.wfn.orbs()])
+        return ' + '.join([f'I({orb},{orb})' for orb in self.wfn.orbs()])
 
     def spin_integrate(self):
         spin_int_list = []
         for orb in self.wfn.orbs():
-            spin_int_list.append("I({0},{0})".format(orb.spatial_str()))
-        return " + ".join(spin_int_list)
+            spin_int_list.append('I({0},{0})'.format(orb.spatial_str()))
+        return ' + '.join(spin_int_list)
 
 
 class TwoElectron:
@@ -78,13 +78,11 @@ class TwoElectron:
         spin_int = []
         for i, j in self.terms:
             if not match_spin or i.spin == j.spin:
-                spin_int.append("{}({},{})".format(name,
-                                                   i.spatial_str(),
-                                                   j.spatial_str()))
+                spin_int.append(f'{name}({i.spatial_str()},{j.spatial_str()})')
 
         self.spin_int = spin_int
 
-        return " + ".join(spin_int)
+        return ' + '.join(spin_int)
 
 
 class J(TwoElectron):
@@ -92,7 +90,7 @@ class J(TwoElectron):
     Coulomb energy terms
     """
     def __str__(self):
-        return " + ".join(["J({},{})".format(i, j) for i, j in self.terms])
+        return ' + '.join([f'J({i},{j})' for i, j in self.terms])
 
     def spin_integrate(self):
         return super().spin_integrate(False, 'J')
@@ -103,7 +101,7 @@ class K(TwoElectron):
     Exchange energy terms
     """
     def __str__(self):
-        return " ".join(["-K({},{})".format(i, j) for i, j in self.terms])
+        return ' '.join([f'-K({i},{j})' for i, j in self.terms])
 
     def spin_integrate(self):
         return super().spin_integrate(True, '-K')
@@ -120,12 +118,10 @@ class HF:
         self.wfn = wavefunction
 
     def __str__(self):
-        return "{}\n+ {}\n+ {}".format(I(self.wfn), J(self.wfn), K(self.wfn))
+        return f'{I(self.wfn)}\n+ {J(self.wfn)}\n+ {K(self.wfn)}'
 
     def spin_integrate(self):
-        i = I(self.wfn)
-        j = J(self.wfn)
-        k = K(self.wfn)
-        return "{}\n+ {}\n {}".format(i.spin_integrate(),
-                                      j.spin_integrate(),
-                                      k.spin_integrate())
+        i = I(self.wfn).spin_integrate()
+        j = J(self.wfn).spin_integrate()
+        k = K(self.wfn).spin_integrate()
+        return f'{i}\n+ {j}\n {k}'

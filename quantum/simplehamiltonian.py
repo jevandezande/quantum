@@ -76,7 +76,7 @@ class SimpleHamiltonian:
             # Wipe out everything higher than quadruples
             hamiltonian[5:, :] = hamiltonian[:, 5:] = 0
         else:
-            raise Exception('Invalid method: {}'.format(method))
+            raise Exception(f'Invalid method: {method}')
 
         return SimpleHamiltonian(hamiltonian, name=method)
 
@@ -85,7 +85,7 @@ class SimpleHamiltonian:
             cmap = plt.get_cmap('Oranges_r')
             #cmap = plt.get_cmap('BuPu_r')
 
-        ax.set_title('{:s}: {: >10.9f}'.format(self.name.upper(), self.energy()))
+        ax.set_title(f'{self.name.upper()}: {self.energy(): >10.9f}')
         im = ax.imshow(self.hamiltonian, interpolation='nearest', cmap=cmap)
 
         return im
@@ -106,7 +106,7 @@ def scale(mat):
         print(hamiltonian)
 
         evals, evecs = np.linalg.eigh(hamiltonian)
-        print('Eigen values\n{}\nEigen vectors\n{}'.format(evals,evecs))
+        print(f'Eigen values:\n{evals}\nEigen vectors:\n{evecs}')
 
         pylab.matshow(hamiltonian)
     pylab.show()
