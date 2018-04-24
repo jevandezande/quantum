@@ -17,13 +17,14 @@ parser.add_argument('-l', '--latex', help='Print the pointgroup in LaTeX format.
 args = parser.parse_args()
 
 if args.show:
-    print(pg.pg_list)
+    print(list(pg.pg_dict.keys()))
 else:
     try:
         group = pg.pg_dict[args.pointgroup]
     except KeyError as e:
-        print(f'Cannot find {args.pointgroup}. It may not be supported yet.\nCurrently support point groups:')
-        print(list(pg.pg_dict.keys()))
+        print(f"""Cannot find {args.pointgroup}. It may not be supported yet.
+Currently support point groups:
+{list(pg.pg_dict.keys())}""")
         sys.exit(1)
 
     if args.latex:
