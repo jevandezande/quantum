@@ -177,7 +177,7 @@ class TermSymbol:
         Generates the SOTermSymbol states that can arise from the given TermSymbol
         :yields: all jstate SOTermSymbols
         """
-        s = Frac(int(self.mult - 1), 2)
+        s = Frac(self.mult - 1, 2)
         max_j = self.am + s
         # Cannot go below 0 for j value
         min_j = max(self.am - s, s%1)

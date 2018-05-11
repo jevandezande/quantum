@@ -25,10 +25,10 @@ class Orbital:
             raise SyntaxError("Projected angular momentum (ml) must be an integer such that -l <= ml <= l,"
                               f"got: ml = {ml}, l = {l}")
 
-        if spin == 1 or spin == Frac(1 / 2) or spin == 'alpha':
-            self.spin = Frac(1 / 2)
-        elif spin == -1 or spin == Frac(-1 / 2) or spin == 'beta':
-            self.spin = Frac(-1 / 2)
+        if spin == 1 or spin == Frac(1, 2) or spin == 'alpha':
+            self.spin = Frac(1, 2)
+        elif spin == -1 or spin == -Frac(1, 2) or spin == 'beta':
+            self.spin = -Frac(1, 2)
         else:
             raise SyntaxError("Invalid spin")
 
