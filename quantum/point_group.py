@@ -13,11 +13,11 @@ class PointGroup:
         :param lin_rot: linear and rotation symmetry transformations
         :param quad: quadratic symmetry transformations
         """
-        if not (len(irreps), len(ops)) == table.shape:
+        if table.shape != (len(irreps), len(ops)):
             raise Exception(f'Invalid size, table shape does not match irreps x ops: ' +
                             f'{table.shape} != {len(irreps)} x {len(ops)}')
-        if not len(coeffs) == len(ops):
-            raise Exception('Mismatched lengths of coefficients and operations.')
+        if len(coeffs) != len(ops):
+            raise Exception(f'Mismatched lengths of coefficients and operations: {len(cooefs)} != {len(ops)}.')
 
         self.name = name
         self.ops = ops
@@ -49,10 +49,11 @@ class PointGroup:
         Generate a nice string of the table
         """
         line_form = '|{:5s}|' + '{:^5g}|'*len(self.ops)
-        out = f'|{self.name:5s}|' + ('{:^5s}|'*len(self.ops)).format(*self.ops) + '    Lin Rot     |        Quad        |\n'
+        ops = ('{:^5s}|'*len(self.ops)).format(*self.ops)
+        out = f'|{self.name:5s}|{ops}    Lin Rot     |        Quad        |\n'
         horiz_line = '-'*(len(out) - 1) + '\n'
         out = horiz_line + out + horiz_line
-        for irrep, line, lin_rot, quad in zip(self.irreps, self.table, self.lin_rot, self.quad):
+        for irrep, line, lin_rot, quad in self:
             out += line_form.format(irrep, *line)
             lin_rot = str(lin_rot)[1:-1].strip(',').replace("'", '')
             quad = str(quad)[1:-1].strip(',').replace("'", '')
@@ -63,8 +64,7 @@ class PointGroup:
         """
         Iterate through the irreps
         """
-        for irrep, line, lin_rot, quad in zip(self.irreps, self.table, self.lin_rot, self.quad):
-            yield irrep, line, lin_rot, quad
+        yield from zip(self.irreps, self.table, self.lin_rot, self.quad)
 
     def latex(self):
         """
@@ -78,12 +78,12 @@ class PointGroup:
         line_form = '{:5s}&' + '{:^5d}&'*len(ops)
         out = '\\begin{tabular}{l' + ' c'*(len(ops) + 2) + '}\\hl\n'
         out += f'{self.name:5s}&' + ('{:^5s}&'*len(ops)).format(*ops) + '    Lin Rot     &        Quad        \\hl\n'
-        for irrep, line, lin_rot, quad in zip(self.irreps, self.table, self.lin_rot, self.quad):
+        for irrep, line, lin_rot, quad in self:
             out += line_form.format(irrep, *line)
             lin_rot = str(lin_rot)[1:-1].strip(',').replace("'", '')
             quad = str(quad)[1:-1].strip(',').replace("'", '')
             out += f'{lin_rot:^12s}&{quad:^16s} \\\\\n'
-        return out.rstrip('\\') + '\\hl\n\\end{tabular}'
+        return out + '\\hl\n\\end{tabular}'
 
     def irrep(self, name):
         """
@@ -101,8 +101,8 @@ class PointGroup:
         if letter in ['A', 'B']:
             return 1
         else:
-            # degen:  2345
-            return '  ETGH'.index(letter)
+            # degen:2345
+            return 'ETGH'.index(letter) + 2
 
     @staticmethod
     def pg_same_irrep(pg, i, j):
@@ -116,8 +116,7 @@ class PointGroup:
         """
         if i == j:
             return True
-        a = pg.irreps[i]
-        b = pg.irreps[j]
+        a, b = pg.irreps[i], pg.irreps[j]
         # If it has a sub-irrep (e.g. Eg_a)
         if len(a) > 2 and a[-2] == '_' and len(b) > 2 and b[-2] == '_':
             # if same irrep
@@ -138,7 +137,6 @@ class PointGroup:
 def reduce(gamma, pg):
     """
     Use the reduction formula to convert a gamma into irreps
-    Note: reduce is a python2 built-in, but was removed in python3
     """
     reduction = []
     for irrep, line, *_ in pg:
@@ -146,7 +144,7 @@ def reduce(gamma, pg):
         real = val.real
         imag = val.imag
         if abs(real - round(real)) > 1e-10 or imag > 1e-10:
-            raise Exception('Failed reduction, non-integer returned: {val} Irrep: {irrep}')
+            raise Exception(f'Failed reduction, non-integer returned: {val} Irrep: {irrep}')
         reduction.append((int(round(real)), irrep))
     return reduction
 
@@ -236,7 +234,7 @@ c1_quad = [('x2', 'y2', 'z2', 'xy', 'xz', 'yz')]
 C1 = PointGroup('C1', ['E'], np.array([1]), ['A'], c1_table, c1_lin_rot, c1_quad)
 
 
-cs_table = np.array([[1, 1],[1, -1]])
+cs_table = np.array([[1, 1], [1, -1]])
 cs_ops = ['E', 'σ_h']
 cs_coeffs = [1, 1]
 cs_irreps = ["A'", 'A"']
@@ -245,7 +243,7 @@ cs_quad = [('x2', 'y2', 'z2', 'xy'), ('xz', 'yz')]
 Cs = PointGroup('Cs', cs_ops, cs_coeffs, cs_irreps, cs_table, cs_lin_rot, cs_quad)
 
 
-ci_table = np.array([[1, 1],[1, -1]])
+ci_table = np.array([[1, 1], [1, -1]])
 ci_ops = ['E', 'i']
 ci_coeffs = [1, 1]
 ci_irreps = ['Ag', 'Au']
@@ -256,7 +254,7 @@ Ci = PointGroup('Ci', ci_ops, ci_coeffs, ci_irreps, ci_table, ci_lin_rot, ci_qua
 ######
 # Cn #
 ######
-c2_table = np.array([[1, 1],[1, -1]])
+c2_table = np.array([[1, 1], [1, -1]])
 c2_ops = ['E', 'C2']
 c2_coeffs = [1, 1]
 c2_irreps = ['A', 'B']
