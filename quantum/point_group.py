@@ -128,17 +128,11 @@ class PointGroup:
     @staticmethod
     def check_orthogonality(pg):
         """
-        Check if the given point group in orthogonal
+        Check if the given point group is orthogonal
         """
-        for i, line1 in enumerate(pg.table):
-            for j, line2 in enumerate(pg.table):
-                val = 1/pg.order * sum(pg.coeffs * line1 * line2)
-                target = 0
-                if PointGroup.pg_same_irrep(pg, i, j):
-                    target = 1
-                if not np.isclose(val, target):
-                    return False
-        return True
+        prods = pg.table.T @ pg.table * pg.coeffs
+        prods -= np.eye(len(prods), dtype='int') * pg.order
+        return np.allclose(prods, 0)
 
 
 def reduce(gamma, pg):
