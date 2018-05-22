@@ -2,14 +2,13 @@ from abc import abstractmethod
 
 
 class Wavefunction:
-    """A combination of Orbitals"""
-
     def __init__(self, *orbitals):
         """
-        Make a wavefunction
-        Warning, does not check for duplicate orbitals
+        A combination of Orbitals
 
         :param orbitals: Orbital objects
+
+        Warning, does not check for duplicate orbitals
         """
 
         if len(orbitals) == 0:
@@ -30,14 +29,19 @@ class Wavefunction:
         return ' '.join(map(str, self))
 
 
-class I:
+class ETerms:
+    def __init__(self, wavefunction):
+        """
+        Energy terms
+        :param wavefunction: a wavefunction object
+        """
+        self.wfn = wavefunction
+
+
+class I(ETerms):
     """
     One-electron energy terms
     """
-
-    def __init__(self, wavefunction):
-        self.wfn = wavefunction
-
     def __str__(self):
         return ' + '.join([f'I({orb},{orb})' for orb in self.wfn])
 
@@ -48,16 +52,17 @@ class I:
         return ' + '.join(spin_int_list)
 
 
-class TwoElectron:
-    """
-    Two-electron energy terms
-    """
+class TwoElectron(ETerms):
     def __init__(self, wavefunction):
-        self.wfn = wavefunction
+        """
+        Two-electron energy terms
+        :param wavefunction: a wavefunction object
+        """
+        super().__init__(wavefunction)
 
         self.terms = []
-        for i, orb_i in enumerate(self.wfn):
-            for j, orb_j in enumerate(self.wfn.orbitals[i + 1:], start=i+1):
+        for i, orb_i in enumerate(self.wfn, start=1):
+            for j, orb_j in enumerate(self.wfn.orbitals[i:], start=i):
                 self.terms.append((orb_i, orb_j))
 
         self.spin_int = ''
@@ -70,18 +75,20 @@ class TwoElectron:
         for term in self.terms:
             yield term
 
-    def spin_integrate(self, match_spin, name, group=False):
+    def spin_integrate(self, k=False):
         """
         Perform spin integration
+        :param k: flip sign and remove terms with unmatched spins
         """
+        sign = '' if not k else '-'
         spin_int = []
         for i, j in self:
-            if not match_spin or i.spin == j.spin:
-                spin_int.append(f'{name}({i.spatial_str()},{j.spatial_str()})')
+            if not k or i.spin == j.spin:
+                spin_int.append(f'{sign}{type(self).__name__}({i.spatial_str()},{j.spatial_str()})')
 
         self.spin_int = spin_int
 
-        return ' + '.join(spin_int)
+        return f' + '.join(spin_int)
 
 
 class J(TwoElectron):
@@ -90,9 +97,6 @@ class J(TwoElectron):
     """
     def __str__(self):
         return ' + '.join([f'J({i},{j})' for i, j in self])
-
-    def spin_integrate(self):
-        return super().spin_integrate(False, 'J')
 
 
 class K(TwoElectron):
@@ -103,24 +107,26 @@ class K(TwoElectron):
         return ' '.join([f'-K({i},{j})' for i, j in self])
 
     def spin_integrate(self):
-        return super().spin_integrate(True, '-K')
+        return super().spin_integrate(True)
 
 
 class HF:
-    """
-    Hartree-Fock object, takes a wavefunction.
-    Generates the HF energy expression, performs the spin integration, and
-    groups terms.
-    """
-
     def __init__(self, wavefunction):
+        """
+        Hartree-Fock object, takes a wavefunction.
+        Generates the HF energy expression and performs the spin integration
+        """
         self.wfn = wavefunction
 
     def __str__(self):
-        return f'{I(self.wfn)}\n+ {J(self.wfn)}\n+ {K(self.wfn)}'
+        i = str(I(self.wfn))
+        j = str(J(self.wfn))
+        k = str(K(self.wfn))
+        return '\n +'.join(terms for terms in (i, j, k) if terms)
 
     def spin_integrate(self):
         i = I(self.wfn).spin_integrate()
         j = J(self.wfn).spin_integrate()
         k = K(self.wfn).spin_integrate()
-        return f'{i}\n+ {j}\n {k}'
+        self.spin_int = (i, j, k)
+        return '\n +'.join(terms for terms in map(str, (i, j, k)) if terms)

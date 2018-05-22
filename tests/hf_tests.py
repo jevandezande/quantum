@@ -28,7 +28,7 @@ def test_wavefunction():
 
 
 def test_i():
-    wfn1 = Wavefunction(AtomicSpinOrbital(1, 0, 0, 1))
+    wfn1 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1))
     wfn2 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1),
                         AtomicSpinOrbital(1, 0,  0, -1),
                         AtomicSpinOrbital(2, 1, -1, -1))
@@ -57,7 +57,7 @@ def test_i():
 
 
 def test_j():
-    wfn1 = Wavefunction(AtomicSpinOrbital(1, 0, 0, 1))
+    wfn1 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1))
     wfn2 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1),
                         AtomicSpinOrbital(1, 0,  0, -1),
                         AtomicSpinOrbital(2, 1, -1, -1))
@@ -74,15 +74,46 @@ def test_j():
 
 
 def test_k():
-    wfn1 = Wavefunction(AtomicSpinOrbital(1, 0, 0, 1))
+    wfn1 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1))
     wfn2 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1),
                         AtomicSpinOrbital(1, 0,  0, -1),
                         AtomicSpinOrbital(2, 1, -1, -1))
     k1 = K(wfn1)
     k2 = K(wfn2)
     assert_equal(str(k1), "")
-    assert_equal(str(k2), "-K(1sa,1sb)"
-                          " -K(1sa,2p_{-1}b)"
-                          " -K(1sb,2p_{-1}b)")
+    assert_equal(str(k2), "-K(1sa,1sb) "
+                          "-K(1sa,2p_{-1}b) "
+                          "-K(1sb,2p_{-1}b)")
     assert_equal(k1.spin_integrate(), "")
     assert_equal(k2.spin_integrate(), "-K(1s,2p_{-1})")
+
+
+def test_HF():
+    wfn1 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1))
+    wfn2 = Wavefunction(AtomicSpinOrbital(1, 0,  0,  1),
+                        AtomicSpinOrbital(1, 0,  0, -1),
+                        AtomicSpinOrbital(2, 1, -1, -1))
+    hf1 = HF(wfn1)
+    hf2 = HF(wfn2)
+
+    assert_equal(str(hf1), "I(1sa,1sa)")
+    assert_equal(str(hf2), "I(1sa,1sa) + "
+                           "I(1sb,1sb) + "
+                           "I(2p_{-1}b,2p_{-1}b)\n +"
+                           "J(1sa,1sb) + "
+                           "J(1sa,2p_{-1}b) + "
+                           "J(1sb,2p_{-1}b)\n +"
+                           "-K(1sa,1sb) "
+                           "-K(1sa,2p_{-1}b) "
+                           "-K(1sb,2p_{-1}b)")
+
+    assert_equal(hf1.spin_integrate(), "I(1s,1s)")
+    assert_equal(
+        hf2.spin_integrate(),
+        "I(1s,1s) + "
+        "I(1s,1s) + "
+        "I(2p_{-1},2p_{-1})\n +"
+        "J(1s,1s) + "
+        "J(1s,2p_{-1}) + "
+        "J(1s,2p_{-1})\n +"
+        "-K(1s,2p_{-1})")
