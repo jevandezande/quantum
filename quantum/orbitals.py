@@ -2,9 +2,9 @@ from fractions import Fraction as Frac
 
 
 ATOMIC_AM_SYMBOLS = 'spdfghiklmnoqrtuvwxyz'
-ATOMIC_AM_SYMBOLS_UP = 'SPDFGHIKLMNOQRTUVWXYZ'
-DIATOMIC_AM_SYMBOLS = 'σπδφγηικμνo'
-DIATOMIC_AM_SYMBOLS_UP = 'ΣΠ∆ΦΓHIKMNOQRTUVWXYZ'
+ATOMIC_AM_SYMBOLS_UP = ATOMIC_AM_SYMBOLS.upper()
+DIATOMIC_AM_SYMBOLS = 'σπδφγηικμνoqrtuvwxyz'
+DIATOMIC_AM_SYMBOLS_UP = DIATOMIC_AM_SYMBOLS.upper()
 
 
 class Orbital:
