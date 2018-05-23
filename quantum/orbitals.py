@@ -9,32 +9,36 @@ DIATOMIC_AM_SYMBOLS_UP = DIATOMIC_AM_SYMBOLS.upper()
 
 class Orbital:
     def __init__(self, n, l, ml, spin):
-        """An orbital
+        """
+        An orbital
         :param n: shell
         :param l: angular momentum
         :param ml: projected angular momentum (azimuthal, etc.)
         :param spin: electron spin
         """
         if not isinstance(n, int) or n < 1:
-            raise SyntaxError("Shells (n) must be integers greater than 0, got: n = {n}")
+            raise ValueError("Shells (n) must be integers greater than 0, got: n = {n}")
 
         if not isinstance(l, int) or l < 0:
-            raise SyntaxError(f"Angular momentum (l) must be an integer >= 0, got: l = {l}")
+            raise ValueError(f"Angular momentum (l) must be an integer >= 0, got: l = {l}")
 
         if not isinstance(ml, int) or ml < -l or ml > l:
-            raise SyntaxError("Projected angular momentum (ml) must be an integer such that -l <= ml <= l,"
-                              f"got: ml = {ml}, l = {l}")
+            raise ValueError("Projected angular momentum (ml) must be an integer such that -l <= ml <= l, "
+                             f"got: l = {l}, ml = {ml}")
 
-        if spin == 1 or spin == Frac(1, 2) or spin == 'alpha':
+        up = [1, Frac(1, 2), 'alpha', 'α']
+        down = [-1, -Frac(1, 2), 'beta', 'β']
+        if spin in up:
             self.spin = Frac(1, 2)
-        elif spin == -1 or spin == -Frac(1, 2) or spin == 'beta':
+        elif spin in down:
             self.spin = -Frac(1, 2)
         else:
-            raise SyntaxError("Invalid spin")
+            raise ValueError(f"Spin must be in {up} or {down}, got: {spin}")
 
         self.n = n
         self.l = l
         self.ml = ml
+        self.orb_symbol = None
 
     def __str__(self):
         spin = 'a' if self.spin > 0 else 'b'
@@ -42,8 +46,10 @@ class Orbital:
 
     def __eq__(self, o):
         if type(self) == type(o) \
-                and self.n == o.n and self.l == o.l \
-                and self.ml == o.ml and self.spin == o.spin:
+                and self.n == o.n \
+                and self.l == o.l \
+                and self.ml == o.ml \
+                and self.spin == o.spin:
             return True
         return False
 
@@ -58,41 +64,42 @@ class Orbital:
 
 
 class AtomicSpinOrbital(Orbital):
-    """An atomic spin orbital"""
-
     def __init__(self, n, l, ml, spin):
+        """
+        An atomic spin orbital
+        """
         if isinstance(l, str):
             if l in ATOMIC_AM_SYMBOLS:
                 l = ATOMIC_AM_SYMBOLS.index(l)
             else:
-                raise SyntaxError("Invalid orbital")
+                raise ValueError(f"Invalid orbital angular momentum: {l}")
 
         # Atomic orbitals of higher angular momentum start at n = l + 1
         if n - l < 1:
-            raise SyntaxError("Invalid subshell")
+            raise ValueError(f"Invalid orbital subshell: {l}")
 
         super().__init__(n, l, ml, spin)
         self.orb_symbol = ATOMIC_AM_SYMBOLS[l]
 
 
 class DiatomicSpinOrbital(Orbital):
-    """Due to the limitations of typing Greek characters on a latin keyboard,
-    The latin equivalents will be accepted and used for variable names.
-    Furthermore, due to code conventions encouraging lowercase for variable
-    names, the lowercase form will be used
-    """
-
     def __init__(self, n, l, ml, spin):
+        """
+        A diatomic spinorbital
+
+        Diatomic orbitals utilize Greek letters.
+        Latin equivalents will be automatically converted upon initialization.
+        """
         if isinstance(l, str):
             if l in DIATOMIC_AM_SYMBOLS:
                 l = DIATOMIC_AM_SYMBOLS.index(l)
             elif l in ATOMIC_AM_SYMBOLS:
-                # Allow the latin equivalent
+                # Allow the Latin equivalent
                 l = ATOMIC_AM_SYMBOLS.index(l)
             else:
-                raise SyntaxError("Invalid orbital")
+                raise ValueError(f"Invalid orbital angular momentum: {l}")
 
         super().__init__(n, l, ml, spin)
         if not abs(ml) == l:
-            raise SyntaxError(f"Diatomic orbitals may only have ml = ±l, got: ml = {ml}, l = {l}")
+            raise ValueError(f"Diatomic orbitals may only have ml = ±l, got: l = {l}, ml = {ml}")
         self.orb_symbol = DIATOMIC_AM_SYMBOLS[l]
