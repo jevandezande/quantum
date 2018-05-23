@@ -14,10 +14,10 @@ class PointGroup:
         :param quad: quadratic symmetry transformations
         """
         if table.shape != (len(irreps), len(ops)):
-            raise Exception(f'Invalid size, table shape does not match irreps x ops: ' +
+            raise SyntaxError(f'Invalid size, table shape does not match irreps x ops: ' +
                             f'{table.shape} != {len(irreps)} x {len(ops)}')
         if len(coeffs) != len(ops):
-            raise Exception(f'Mismatched lengths of coefficients and operations: {len(cooefs)} != {len(ops)}.')
+            raise SyntaxError(f'Mismatched lengths of coefficients and operations: {len(cooefs)} != {len(ops)}.')
 
         self.name = name
         self.ops = ops
