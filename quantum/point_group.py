@@ -118,11 +118,9 @@ class PointGroup:
             return True
         a, b = pg.irreps[i], pg.irreps[j]
         # If it has a sub-irrep (e.g. Eg_a)
-        if len(a) > 2 and a[-2] == '_' and len(b) > 2 and b[-2] == '_':
-            # if same irrep
-            if a[:-1] == b[:-1]:
-                return True
-        return False
+        return len(a) > 2 and a[-2] == '_' \
+            and len(b) > 2 and b[-2] == '_' \
+            and a[:-1] == b[:-1]
 
     @staticmethod
     def check_orthogonality(pg):
