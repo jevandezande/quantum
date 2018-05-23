@@ -65,6 +65,9 @@ def test_reduce():
     reduction = reduce(gamma, C2v)
     assert_equal(reduction, [(5, 'A1'), (2, 'A2'), (4, 'B1'), (4, 'B2')])
 
+    gamma = np.array([10, -3, 1, 2])
+    assert_raises(ValueError, reduce, gamma, C2v)
+
 
 def test_vibrations():
     gamma = np.array([7])
@@ -76,9 +79,6 @@ def test_vibrations():
     assert_equal(vibs, [(2, 'A'), (2, 'E_a'), (2, 'E_b')])
     assert_equal(total_vibrations(vibs), 6)
     ir, raman = classify_vibrations(vibs, C3)
-    # TODO: fix for Cn
-    #assert_equal(ir, [(2, 'A'), (2, 'E_a'), (2, 'E_b')])
-    #assert_equal(raman, [(2, 'A'), (2, 'E_a'), (2, 'E_b')])
 
     gamma = np.array([15, -1, 3, 3])
     vibs = vibrations(gamma, C2v)
@@ -113,10 +113,10 @@ def test_degeneracy():
 
 def test_pg_same_irrep():
     pg_same_irrep = PointGroup.pg_same_irrep
-    assert_true(pg_same_irrep(C1, 0, 0)) # A, A
-    assert_false(pg_same_irrep(C2v, 2, 3)) # B1, B2
-    assert_true(pg_same_irrep(C3, 1, 2)) # E_a, E_b
-    assert_false(pg_same_irrep(Oh, 4, 9)) # T2g, T2u
+    assert_true(pg_same_irrep(C1, 0, 0))  # A, A
+    assert_false(pg_same_irrep(C2v, 2, 3))  # B1, B2
+    assert_true(pg_same_irrep(C3, 1, 2))  # E_a, E_b
+    assert_false(pg_same_irrep(Oh, 4, 9))  # T2g, T2u
 
 
 if __name__ == '__main__':
