@@ -141,7 +141,7 @@ def reduce(gamma, pg):
         val = 1/pg.order * sum(gamma * line * pg.coeffs)
         real = val.real
         imag = val.imag
-        if abs(real - round(real)) > 1e-10 or imag > 1e-10:
+        if abs(real - round(real)) > 1e-10 or abs(imag) > 1e-10:
             raise Exception(f'Failed reduction, non-integer returned: {val} Irrep: {irrep}')
         reduction.append((int(round(real)), irrep))
     return reduction
