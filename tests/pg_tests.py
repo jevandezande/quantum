@@ -11,12 +11,12 @@ def test_repr_str():
     assert_equal(repr(C2v), '<PointGroup C2v>')
     c2v_str = '''\
 ---------------------------------------------------------------------
-|C2v  |  E  | C2  |σ(xz)|σ(yz)|    Lin Rot     |        Quad        |
+| C2v |  E  | C2  |σ(xz)|σ(yz)|    Lin Rot     |        Quad        |
 ---------------------------------------------------------------------
-|A1   |  1  |  1  |  1  |  1  |       z        |     x2, y2, z2     |
-|A2   |  1  |  1  | -1  | -1  |       Rz       |         xy         |
-|B1   |  1  | -1  | -1  |  1  |     x, Ry      |         xz         |
-|B2   |  1  | -1  |  1  | -1  |     y, Rx      |         yz         |
+| A1  |  1  |  1  |  1  |  1  |       z        |     x2, y2, z2     |
+| A2  |  1  |  1  | -1  | -1  |       Rz       |         xy         |
+| B1  |  1  | -1  | -1  |  1  |     x, Ry      |         xz         |
+| B2  |  1  | -1  |  1  | -1  |     y, Rx      |         yz         |
 ---------------------------------------------------------------------
 '''
     assert_equal(str(C2v), c2v_str)
@@ -30,7 +30,7 @@ def test_order():
 
 def test_latex():
     D3h_latex = r'''\begin{tabular}{l c c c c c c c c}\hl
-D3h  &  E  & C3  & C'2 &\sigma h& S3  &\sigma v&    Lin Rot     &        Quad        \hl
+D3h  &  E  & C3  & C'2 &{\sigma}h& S3  &{\sigma}v&    Lin Rot     &        Quad        \hl
 A'1  &  1  &  1  &  1  &  1  &  1  &  1  &            &   x2+y2, z2     \\
 A'2  &  1  &  1  & -1  &  1  &  1  & -1  &     Rz     &                 \\
 E'   &  2  & -1  &  0  &  2  & -1  &  0  &   (x, y)   &  (x2-y2, xy)    \\

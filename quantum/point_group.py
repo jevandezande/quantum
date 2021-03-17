@@ -35,7 +35,7 @@ class PointGroup:
         self.quad = []
         for q in quad:
             if not isinstance(q, tuple):
-                if len(q) == 0:
+                if not len(q):
                     q = tuple()
                 else:
                     q = (q, )
@@ -48,17 +48,26 @@ class PointGroup:
         """
         Generate a nice string of the table
         """
-        line_form = '|{:5s}|' + '{:^5g}|'*len(self.ops)
-        ops = ('{:^5s}|'*len(self.ops)).format(*self.ops)
-        out = f'|{self.name:5s}|{ops}    Lin Rot     |        Quad        |\n'
-        horiz_line = '-'*(len(out) - 1) + '\n'
-        out = horiz_line + out + horiz_line
-        for irrep, line, lin_rot, quad in self:
-            out += line_form.format(irrep, *line)
-            lin_rot = str(lin_rot)[1:-1].strip(',').replace("'", '')
-            quad = str(quad)[1:-1].strip(',').replace("'", '')
-            out += f'{lin_rot:^16s}|{quad:^20s}|\n'
-        return out + horiz_line
+        ops = "".join(f"{op:^5s}|" for op in self.ops)
+
+        header = f"|{self.name:^5s}|{ops}    Lin Rot     |        Quad        |"
+        horizontal_line = "-"*len(header)
+        data_line_form = "|{:^5s}|" + "{:^5g}|"*len(self.ops)
+
+        def format_line(irrep, line, lin_rot, quad):
+            lin_rot = str(lin_rot)[1:-1].strip(",").replace("'", "")
+            quad = str(quad)[1:-1].strip(",").replace("'", "")
+            return data_line_form.format(irrep, *line) + f"{lin_rot:^16s}|{quad:^20s}|"
+
+        data = "\n".join(format_line(*args) for args in self)
+
+        return f"""\
+{horizontal_line}
+{header}
+{horizontal_line}
+{data}
+{horizontal_line}
+"""
 
     def __iter__(self):
         """
@@ -71,19 +80,29 @@ class PointGroup:
         Generate a string of the table in latex form
         """
         # clean ops
-        ops = []
-        for op in self.ops:
-            ops.append(op.replace('σ', '\\sigma '))
+        def latexify_greek(op):
+            return op.replace("σ", "{\\sigma}")
 
-        line_form = '{:5s}&' + '{:^5d}&'*len(ops)
-        out = '\\begin{tabular}{l' + ' c'*(len(ops) + 2) + '}\\hl\n'
-        out += f'{self.name:5s}&' + ('{:^5s}&'*len(ops)).format(*ops) + '    Lin Rot     &        Quad        \\hl\n'
-        for irrep, line, lin_rot, quad in self:
-            out += line_form.format(irrep, *line)
-            lin_rot = str(lin_rot)[1:-1].strip(',').replace("'", '')
-            quad = str(quad)[1:-1].strip(',').replace("'", '')
-            out += f'{lin_rot:^12s}&{quad:^16s} \\\\\n'
-        return out + '\\hl\n\\end{tabular}'
+        ops = "&".join(f"{latexify_greek(op):^5s}" for op in self.ops)
+
+        header = f"{self.name:5s}&{ops}&    Lin Rot     &        Quad        \\hl"
+
+        num_ops = len(self.ops)
+        line_form = "{:5s}&" + "{:^5d}&"*num_ops
+
+        def format_line(irrep, line, lin_rot, quad):
+            lin_rot = str(lin_rot)[1:-1].strip(",").replace("'", "")
+            quad = str(quad)[1:-1].strip(",").replace("'", "")
+            return line_form.format(irrep, *line) + f"{lin_rot:^12s}&{quad:^16s} \\\\"
+
+        data = "\n".join(format_line(*args) for args in self)
+
+        return f"""\
+\\begin{{tabular}}{{l{" c"*num_ops} c c}}\\hl
+{header}
+{data}\n\\hl
+\\end{{tabular}}\
+"""
 
     def irrep(self, name):
         """
@@ -97,12 +116,7 @@ class PointGroup:
 
     @staticmethod
     def degeneracy(irrep):
-        letter = irrep[0]
-        if letter in ['A', 'B']:
-            return 1
-        else:
-            # degen:2345
-            return 'ETGH'.index(letter) + 2
+        return {'A': 1, 'B': 1, 'E': 2, 'T': 3, 'G': 4, 'H': 5}[irrep[0]]
 
     @staticmethod
     def pg_same_irrep(pg, i, j):
@@ -128,7 +142,7 @@ class PointGroup:
         Check if the given point group is orthogonal
         """
         prods = pg.table.T @ pg.table * pg.coeffs
-        prods -= np.eye(len(prods), dtype='int') * pg.order
+        prods -= np.eye(len(prods), dtype=int) * pg.order
         return np.allclose(prods, 0)
 
 
@@ -139,11 +153,9 @@ def reduce(gamma, pg):
     reduction = []
     for irrep, line, *_ in pg:
         val = 1/pg.order * sum(gamma * line * pg.coeffs)
-        real = val.real
-        imag = val.imag
-        if abs(real - round(real)) > 1e-10 or abs(imag) > 1e-10:
+        if abs(val - round(val.real)) > 1e-10:
             raise ValueError(f'Failed reduction, non-integer returned: {val} Irrep: {irrep}')
-        reduction.append((int(round(real)), irrep))
+        reduction.append((int(round(val.real)), irrep))
     return reduction
 
 
@@ -154,21 +166,17 @@ def vibrations(gamma, pg):
     reduction = reduce(gamma, pg)
     vibs = []
     for val, irrep in reduction:
-        line, lin_rot, quad = pg.irrep(irrep)
-        val -= len(lin_rot)
-        vibs.append((val, irrep))
+        _, lin_rot, _ = pg.irrep(irrep)
+        vibs.append((val - len(lin_rot), irrep))
     return vibs
 
 
 def total_vibrations(vibs):
-    total = 0
-    for val, irrep in vibs:
-        # TODO: Fix hack for C3
-        if len(irrep) > 2 and irrep[-2] == '_':
-            total += val
-        else:
-            total += val*PointGroup.degeneracy(irrep)
-    return total
+    # TODO: Fix hack for C3
+    return sum(
+        val if len(irrep) > 2 and irrep[-2] == "_" else val*PointGroup.degeneracy(irrep)
+        for val, irrep in vibs
+    )
 
 
 def ir_active(irrep, pg):
@@ -177,7 +185,7 @@ def ir_active(irrep, pg):
     """
     lines, lin_rot, quad = pg.irrep(irrep)
 
-    if len(lin_rot) == 0:
+    if not lin_rot:
         return False
 
     if 'x' in lin_rot or 'y' in lin_rot or 'z' in lin_rot:
@@ -194,8 +202,7 @@ def raman_active(irrep, pg):
     """
     Return True if Raman active irrep
     """
-    lines, lin_rot, quad = pg.irrep(irrep)
-    return len(quad) > 0
+    return len(pg.irrep(irrep)[2]) > 0
 
 
 def classify_vibrations(vibs, pg):
@@ -206,15 +213,8 @@ def classify_vibrations(vibs, pg):
     :param pg: PointGroup
     :return: ir active [(val, irrep), ...], raman active [(val, irrep), ...]
     """
-    ir = []
-    raman = []
-    for val, irrep in vibs:
-        if val == 0:
-            continue
-        if ir_active(irrep, pg):
-            ir.append((val, irrep))
-        if raman_active(irrep, pg):
-            raman.append((val, irrep))
+    ir = [(val, irrep) for val, irrep in vibs if val and ir_active(irrep, pg)]
+    raman = [(val, irrep) for val, irrep in vibs if val and raman_active(irrep, pg)]
     return ir, raman
 
 
@@ -534,3 +534,7 @@ pg_dict = {
     'Oh': Oh,
     'Ih': Ih,
 }
+
+
+if __name__ == "__main__":
+    print(C2v.latex())
