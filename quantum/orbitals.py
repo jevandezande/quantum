@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from fractions import Fraction as Frac
+from typing import TypeAlias, Literal, Optional
 
 
 ATOMIC_AM_SYMBOLS = 'spdfghiklmnoqrtuvwxyz'
@@ -7,51 +9,42 @@ DIATOMIC_AM_SYMBOLS = 'σπδφγηικμνoqrtuvwxyz'
 DIATOMIC_AM_SYMBOLS_UP = DIATOMIC_AM_SYMBOLS.upper()
 
 
+@dataclass
 class Orbital:
-    def __init__(self, n, l, ml, spin):
-        """
-        An orbital
-        :param n: shell
-        :param l: angular momentum
-        :param ml: projected angular momentum (azimuthal, etc.)
-        :param spin: electron spin
-        """
-        if not isinstance(n, int) or n < 1:
-            raise ValueError("Shells (n) must be integers greater than 0, got: n = {n}")
+    """
+    An orbital
+    :param n: shell
+    :param l: angular momentum
+    :param ml: projected angular momentum (azimuthal, etc.)
+    :param spin: electron spin
+    """
+    n: int
+    l: int
+    ml: int
+    spin: int | Frac
+    orb_symbol: Optional[str] = None
 
-        if not isinstance(l, int) or l < 0:
-            raise ValueError(f"Angular momentum (l) must be an integer >= 0, got: l = {l}")
-
-        if not isinstance(ml, int) or ml < -l or ml > l:
+    def __post_init__(self):
+        if self.n < 1:
+            raise ValueError("Shells (n) must be integers greater than 0, got: {self.n}")
+        if self.l < 0:
+            raise ValueError(f"Angular momentum (l) must be an integer >= 0, got: {self.l}")
+        if self.ml < -self.l or self.ml > self.l:
             raise ValueError("Projected angular momentum (ml) must be an integer such that -l <= ml <= l, "
-                             f"got: l = {l}, ml = {ml}")
+                             f"got: {self.l}, {self.ml=}")
 
         up = [1, Frac(1, 2), 'alpha', 'α']
         down = [-1, -Frac(1, 2), 'beta', 'β']
-        if spin in up:
+        if self.spin in up:
             self.spin = Frac(1, 2)
-        elif spin in down:
+        elif self.spin in down:
             self.spin = -Frac(1, 2)
         else:
-            raise ValueError(f"Spin must be in {up} or {down}, got: {spin}")
-
-        self.n = n
-        self.l = l
-        self.ml = ml
-        self.orb_symbol = None
+            raise ValueError(f"Spin must be in {up=} or {down=}, got: {self.spin}")
 
     def __str__(self):
         spin = 'a' if self.spin > 0 else 'b'
         return self.spatial_str() + spin
-
-    def __eq__(self, o):
-        if type(self) == type(o) \
-                and self.n == o.n \
-                and self.l == o.l \
-                and self.ml == o.ml \
-                and self.spin == o.spin:
-            return True
-        return False
 
     def __repr__(self):
         return str(self)
